@@ -1,0 +1,961 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>たなかAIカンパニー オフィス</title>
+<style>
+  :root {
+    --cream: #fff8ee;
+    --paper: #ffffff;
+    --ink: #4a3426;
+    --ink-soft: #8a6d58;
+    --shiba: #e89b4f;
+    --shiba-deep: #c97a32;
+    --mint: #8fd3b6;
+    --line: #f0dcc4;
+    --off: #e6d9c8;
+    --shadow: 0 6px 24px rgba(120, 72, 30, .16);
+    --font: "Hiragino Maru Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Yu Gothic UI", "Meiryo", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--font);
+    color: var(--ink);
+    background: radial-gradient(ellipse at 50% 35%, #fffaf2 0%, #fbeedd 60%, #f3dfc6 100%);
+  }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; outline: none; }
+
+  /* 名札・吹き出し（3Dの位置に合わせて動かす） */
+  .float { position: fixed; left: 0; top: 0; pointer-events: none; will-change: transform; display: none; }
+  #nametag {
+    background: var(--paper); border: 2px solid var(--shiba); color: var(--ink);
+    border-radius: 999px; padding: 3px 12px; font-size: 13px; font-weight: 700; white-space: nowrap;
+    box-shadow: var(--shadow);
+  }
+  #nametag::before { content: "🐾 "; }
+  #bubble {
+    background: var(--paper); color: var(--ink); border-radius: 16px; padding: 8px 14px;
+    font-size: 14px; font-weight: 700; max-width: 240px; line-height: 1.45; box-shadow: var(--shadow);
+    border: 2px solid var(--line);
+  }
+  #bubble::after {
+    content: ""; position: absolute; left: -9px; bottom: 10px; border: 8px solid transparent;
+    border-right-color: var(--paper); border-left: 0;
+  }
+  #bubble.trouble { border-color: #b9c7e8; }
+
+  /* 画面の隅の小さな表示 */
+  #hud {
+    position: fixed; left: 14px; top: 14px; background: rgba(255,255,255,.88); backdrop-filter: blur(6px);
+    border-radius: 18px; padding: 10px 14px; box-shadow: var(--shadow); min-width: 190px; z-index: 5;
+  }
+  #hud .co { font-weight: 800; font-size: 14px; letter-spacing: .02em; }
+  #hud .co::before { content: "🐕 "; }
+  #hud .date { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  #hud .count { display: inline-flex; align-items: baseline; gap: 4px; margin-top: 6px; font-weight: 800; }
+  #hud .count b { font-size: 26px; color: var(--shiba-deep); line-height: 1; }
+  #hud .count.state b { font-size: 16px; }
+  #hud .week { display: flex; gap: 6px; margin-top: 8px; }
+  #hud .dot { width: 18px; text-align: center; font-size: 9px; color: var(--ink-soft); }
+  #hud .dot i { display: block; width: 14px; height: 14px; margin: 0 auto 2px; border-radius: 50%; background: var(--off); }
+  #hud .dot.on i { background: var(--shiba); box-shadow: 0 0 0 2px #fde3c6; }
+  #hud .dot.today i { outline: 2px solid var(--ink-soft); outline-offset: 1px; }
+  #hint {
+    position: fixed; right: 14px; bottom: 12px; font-size: 11px; color: var(--ink-soft);
+    background: rgba(255,255,255,.75); padding: 4px 10px; border-radius: 999px; z-index: 5;
+  }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; font-size: 14px; color: var(--ink-soft); pointer-events: none; }
+
+  /* 3Dが使えないときの表示 */
+  #fallback {
+    position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 90px 16px 40px; overflow: auto;
+  }
+  #fallback .card { background: var(--paper); border-radius: 22px; box-shadow: var(--shadow); padding: 20px; width: min(520px, 100%); }
+  #fallback .note { font-size: 12px; color: var(--ink-soft); }
+  #fallback .big { font-size: 22px; font-weight: 800; margin: 8px 0 12px; }
+
+  /* ポップアップ */
+  #modal { position: fixed; inset: 0; background: rgba(74, 52, 38, .35); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+  #modal.open { display: flex; }
+  #modal .sheet { background: var(--cream); border-radius: 22px; box-shadow: var(--shadow); width: min(480px, 100%); max-height: 88vh; overflow: auto; padding: 18px; position: relative; }
+  #modal .close { position: absolute; right: 10px; top: 8px; border: 0; background: none; font-size: 22px; cursor: pointer; color: var(--ink-soft); }
+  .mtitle { font-weight: 800; font-size: 17px; margin: 0 0 12px; }
+  .mtitle small { font-weight: 400; color: var(--ink-soft); font-size: 12px; margin-left: 6px; }
+  .ncard { display: flex; gap: 12px; align-items: center; background: var(--paper); border-radius: 16px; padding: 12px; margin-bottom: 10px; border: 2px solid var(--line); }
+  .ncard .ic { font-size: 26px; width: 44px; height: 44px; display: grid; place-items: center; background: #fff3e4; border-radius: 12px; flex: none; }
+  .ncard .hd { font-weight: 800; font-size: 15px; line-height: 1.35; }
+  .ncard a { font-size: 12px; color: var(--shiba-deep); word-break: break-all; }
+  .btn { display: inline-block; margin-top: 6px; background: var(--shiba); color: #fff; font-weight: 800; text-decoration: none; padding: 9px 16px; border-radius: 999px; font-size: 14px; }
+  .empty { background: var(--paper); border-radius: 16px; padding: 18px; text-align: center; font-weight: 700; margin-bottom: 10px; }
+  .idcard { display: flex; gap: 14px; align-items: center; background: var(--paper); border-radius: 18px; padding: 14px; border-top: 10px solid var(--shiba); }
+  .idcard svg { flex: none; }
+  .idcard dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 13px; }
+  .idcard dt { color: var(--ink-soft); }
+  .idcard dd { margin: 0; font-weight: 700; }
+  .idcard .nm { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="loading">オフィスを準備中…</div>
+<div id="nametag" class="float"></div>
+<div id="bubble" class="float"></div>
+<div id="hud"></div>
+<div id="hint">ドラッグで回転・ホイールで拡大／報告書や社員をクリック</div>
+<div id="fallback"><div class="card" id="fallbackCard"></div></div>
+<div id="modal" role="dialog" aria-modal="true"><div class="sheet"><button class="close" aria-label="閉じる">×</button><div id="modalBody"></div></div></div>
+
+<!-- ↓↓ ニュースのデータ。data/news.json と完全に同じ内容をここに入れる（ai-news が毎回置き換える） ↓↓ -->
+<!--NEWS_DATA_START-->
+<script id="news-data" type="application/json">
+{
+  "company": "たなかAIカンパニー",
+  "employee": {
+    "name": "ニュースくん",
+    "role": "AIニュース担当",
+    "hours": "毎朝 7:00（日本時間）"
+  },
+  "updated_at": "2026-10-10T11:10:00+09:00",
+  "days": [
+    {
+      "date": "2026-10-10",
+      "status": "reported",
+      "checked_at": "2026-10-10T11:10:00+09:00",
+      "message": "社長！今日は2件です！どちらも飲食店に関係ありそうです！",
+      "report_file": "報告/2026-10-10_AIニュース.md",
+      "news": [
+        {
+          "headline": "AI料理写真、見抜けた人は1.5%",
+          "category": "image",
+          "published": "2026-10-09",
+          "source": "SOEL株式会社（PR TIMES プレスリリース）",
+          "url": "https://prtimes.jp/main/html/rd/p/000000005.000190796.html",
+          "verified": "search"
+        },
+        {
+          "headline": "国内ChatGPT利用者 推計2670万人",
+          "category": "chatgpt",
+          "published": "2026-10-09",
+          "source": "株式会社ヴァリューズ（PR TIMES プレスリリース）",
+          "url": "https://prtimes.jp/main/html/rd/p/000000231.000007396.html",
+          "verified": "search"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!--NEWS_DATA_END-->
+<!-- ↑↑ ここまでがデータ ↑↑ -->
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- データの読み込み ----------
+  var DATA;
+  try { DATA = JSON.parse(document.getElementById("news-data").textContent); }
+  catch (e) { DATA = { company: "たなかAIカンパニー", employee: { name: "ニュースくん", role: "AIニュース担当", hours: "毎朝 7:00（日本時間）" }, days: [] }; }
+  var EMP = DATA.employee || {};
+  var FONT = '"Hiragino Maru Gothic ProN","Hiragino Sans","BIZ UDPGothic","Yu Gothic UI","Meiryo",sans-serif';
+
+  // ---------- 日本時間 ----------
+  var fmt = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+  function jst(d) {
+    d = d || new Date();
+    var o = {};
+    fmt.formatToParts(d).forEach(function (p) { o[p.type] = p.value; });
+    return { y: +o.year, m: +o.month, d: +o.day, h: (+o.hour) % 24, mi: +o.minute, s: +o.second, ms: d.getMilliseconds() };
+  }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function ymd(y, m, d) { var t = new Date(Date.UTC(y, m - 1, d)); return t.getUTCFullYear() + "-" + pad(t.getUTCMonth() + 1) + "-" + pad(t.getUTCDate()); }
+  var WD = ["日", "月", "火", "水", "木", "金", "土"];
+  function weekday(y, m, d) { return WD[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]; }
+
+  var NOW = jst();
+  var TODAY = ymd(NOW.y, NOW.m, NOW.d);
+  var dayMap = {};
+  (DATA.days || []).forEach(function (d) { dayMap[d.date] = d; });
+  var today = dayMap[TODAY] || null;
+  var news = (today && today.status === "reported" && today.news) ? today.news.slice(0, 5) : [];
+  var STATE = !today ? "before" : (today.status === "search_failed" ? "failed" : (today.status === "reported" && news.length ? "reported" : "nonews"));
+
+  var STATE_LABEL = { before: "出社前", reported: news.length + "件", nonews: "異常なし", failed: "検索失敗" };
+  var DEFAULT_MSG = {
+    before: "",
+    reported: "社長！今日は" + news.length + "件です！",
+    nonews: "社長！今日は新しいニュースはありません。異常なしです！",
+    failed: "社長、すみません…今日は検索がうまくいきませんでした"
+  };
+  var MESSAGE = (today && today.message) || DEFAULT_MSG[STATE];
+  var CAT = {
+    chatgpt: { icon: "💬", label: "ChatGPT" },
+    claude: { icon: "✳️", label: "Claude" },
+    image: { icon: "🎨", label: "画像生成" },
+    efficiency: { icon: "⚡", label: "仕事効率化" },
+    other: { icon: "📰", label: "その他" }
+  };
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? u : "#"; }
+
+  // ---------- 隅の表示（3Dがなくても必ず出す） ----------
+  function renderHUD() {
+    var j = jst();
+    var html = '<div class="co">' + esc(DATA.company) + '</div>';
+    html += '<div class="date">' + j.y + "年" + j.m + "月" + j.d + "日（" + weekday(j.y, j.m, j.d) + "）</div>";
+    if (STATE === "reported") html += '<div class="count"><span>今日</span><b>' + news.length + '</b><span>件</span></div>';
+    else html += '<div class="count state"><span>今日</span><b>' + STATE_LABEL[STATE] + '</b></div>';
+    html += '<div class="week" title="直近7日の出勤">';
+    for (var i = 6; i >= 0; i--) {
+      var ds = ymd(j.y, j.m, j.d - i);
+      var t = new Date(Date.UTC(j.y, j.m - 1, j.d - i));
+      var on = !!dayMap[ds];
+      html += '<div class="dot' + (on ? " on" : "") + (i === 0 ? " today" : "") + '" title="' + ds + (on ? " 出勤" : " 記録なし") + '"><i></i>' + WD[t.getUTCDay()] + "</div>";
+    }
+    html += "</div>";
+    document.getElementById("hud").innerHTML = html;
+  }
+
+  // ---------- 見出しカード・社員証 ----------
+  function reportFileLink() {
+    var f = (today && today.report_file) || ("報告/" + TODAY + "_AIニュース.md");
+    return encodeURI(f);
+  }
+  function newsCardsHTML() {
+    var h = "";
+    if (STATE === "reported") {
+      news.forEach(function (n) {
+        var c = CAT[n.category] || CAT.other;
+        h += '<div class="ncard"><div class="ic" title="' + esc(c.label) + '">' + c.icon + '</div><div><div class="hd">' + esc(n.headline) + '</div>' +
+          '<a href="' + esc(safeUrl(n.url)) + '" target="_blank" rel="noopener">出典：' + esc(n.source) + "</a></div></div>";
+      });
+    } else {
+      var t = { before: "🕖 まだ出社前です", nonews: "✅ 異常なし（新しいニュースなし）", failed: "😥 検索に失敗しました" }[STATE];
+      h += '<div class="empty">' + t + "</div>";
+    }
+    if (today) h += '<a class="btn" href="' + reportFileLink() + '" target="_blank">📄 報告ファイルを開く</a>';
+    return h;
+  }
+  function openReports() {
+    var j = jst();
+    openModal('<p class="mtitle">📋 今日の報告<small>' + j.m + "/" + j.d + "・" + STATE_LABEL[STATE] + "</small></p>" + newsCardsHTML());
+  }
+  var SHIBA_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><polygon points="18,40 26,8 46,28" fill="#e89b4f"/><polygon points="82,40 74,8 54,28" fill="#e89b4f"/><polygon points="24,32 28,16 38,28" fill="#fff4e2"/><polygon points="76,32 72,16 62,28" fill="#fff4e2"/><circle cx="50" cy="54" r="36" fill="#e89b4f"/><ellipse cx="50" cy="68" rx="24" ry="18" fill="#fff4e2"/><ellipse cx="38" cy="38" rx="4" ry="2.5" fill="#fff4e2"/><ellipse cx="62" cy="38" rx="4" ry="2.5" fill="#fff4e2"/><circle cx="38" cy="50" r="3.6" fill="#2b2b2b"/><circle cx="62" cy="50" r="3.6" fill="#2b2b2b"/><circle cx="38" cy="50" r="9" fill="none" stroke="#5b3a29" stroke-width="2.4"/><circle cx="62" cy="50" r="9" fill="none" stroke="#5b3a29" stroke-width="2.4"/><line x1="47" y1="50" x2="53" y2="50" stroke="#5b3a29" stroke-width="2.4"/><ellipse cx="50" cy="62" rx="5" ry="3.6" fill="#2b2b2b"/><path d="M44 69 Q50 74 56 69" stroke="#2b2b2b" stroke-width="2" fill="none"/></svg>';
+  function openIdCard() {
+    var st = {
+      before: "出社前（7:00 出社予定）",
+      reported: "出社済み・報告 " + news.length + " 件",
+      nonews: "出社済み・異常なし",
+      failed: "出社済み・検索に失敗"
+    }[STATE];
+    if (today && today.checked_at) { var m = /T(\d\d:\d\d)/.exec(today.checked_at); if (m) st += "（" + m[1] + "）"; }
+    openModal('<p class="mtitle">🪪 社員証</p><div class="idcard">' + SHIBA_SVG + '<div><div class="nm">' + esc(EMP.name) + '</div><dl>' +
+      "<dt>仕事</dt><dd>" + esc(EMP.role) + "（直近24時間のAIニュースを最大5件報告）</dd>" +
+      "<dt>勤務時間</dt><dd>" + esc(EMP.hours) + "</dd>" +
+      "<dt>今日の状態</dt><dd>" + esc(st) + "</dd></dl></div></div>");
+  }
+  var modal = document.getElementById("modal");
+  function openModal(html) { document.getElementById("modalBody").innerHTML = html; modal.classList.add("open"); }
+  function closeModal() { modal.classList.remove("open"); }
+  modal.addEventListener("click", function (e) { if (e.target === modal || e.target.classList.contains("close")) closeModal(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
+
+  // ---------- 3Dが使えないとき ----------
+  function showFallback(reason) {
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("hint").style.display = "none";
+    var note = reason === "webgl" ? "この環境では3D表示ができませんでした。" : "3D画面を読み込めませんでした（インターネット接続を確認してください）。";
+    var head = { before: "🕖 ニュースくんは出社前です", reported: "📋 今日の報告 " + news.length + " 件", nonews: "✅ 今日は異常なし", failed: "😥 今日は検索に失敗しました" }[STATE];
+    document.getElementById("fallbackCard").innerHTML = '<div class="note">' + note + '</div><div class="big">' + head + "</div>" +
+      (MESSAGE ? '<p style="margin:0 0 12px">🐕 ' + esc(EMP.name) + "「" + esc(MESSAGE) + "」</p>" : "") + newsCardsHTML();
+    document.getElementById("fallback").style.display = "flex";
+  }
+
+  // ---------- three.js の読み込み ----------
+  var THREE_URL = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+  var ORBIT_URLS = [
+    "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"
+  ];
+  function loadScript(src, ms) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement("script");
+      var timer = setTimeout(function () { rej(new Error("timeout")); }, ms);
+      s.src = src;
+      s.onload = function () { clearTimeout(timer); res(); };
+      s.onerror = function () { clearTimeout(timer); rej(new Error("load error")); };
+      document.head.appendChild(s);
+    });
+  }
+  function boot() {
+    renderHUD();
+    setInterval(function () {
+      var j = jst();
+      if (ymd(j.y, j.m, j.d) !== TODAY) location.reload(); // 日付が変わったら読み直す
+      renderHUD();
+    }, 30000);
+    loadScript(THREE_URL, 12000).catch(function () {}).then(function () {
+      if (!window.THREE) { showFallback("nolib"); return; }
+      var tryOrbit = function (i) {
+        if (THREE.OrbitControls || i >= ORBIT_URLS.length) return Promise.resolve();
+        return loadScript(ORBIT_URLS[i], 8000).catch(function () {}).then(function () { return tryOrbit(i + 1); });
+      };
+      return tryOrbit(0).then(function () {
+        try { init3D(); } catch (e) { console.error(e); showFallback("webgl"); }
+      });
+    });
+  }
+
+  // =====================================================================
+  //  3D オフィス
+  // =====================================================================
+  function init3D() {
+    var stage = document.getElementById("stage");
+    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    stage.appendChild(renderer.domElement);
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(34, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(14, 11.5, 14);
+
+    // --- 素材 ---
+    var grad = (function () {
+      var c = document.createElement("canvas"); c.width = 3; c.height = 1;
+      var g = c.getContext("2d");
+      ["#8c8c8c", "#c8c8c8", "#f2f2f2"].forEach(function (col, i) { g.fillStyle = col; g.fillRect(i, 0, 1, 1); });
+      var t = new THREE.CanvasTexture(c);
+      t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false;
+      return t;
+    })();
+    var matCache = {};
+    function mat(color, opts) {
+      var key = color + JSON.stringify(opts || {});
+      if (!matCache[key]) matCache[key] = new THREE.MeshToonMaterial(Object.assign({ color: color, gradientMap: grad }, opts || {}));
+      return matCache[key];
+    }
+    function mesh(geo, material, x, y, z, shadow) {
+      var m = new THREE.Mesh(geo, material);
+      m.position.set(x || 0, y || 0, z || 0);
+      if (shadow !== false) { m.castShadow = true; m.receiveShadow = true; }
+      return m;
+    }
+    function roundRect(g, x, y, w, h, r) {
+      g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+    }
+    function textTex(text, o) {
+      o = Object.assign({ w: 512, h: 256, bg: "#ffffff", fg: "#4a3426", size: 110, r: 40, border: null }, o || {});
+      var c = document.createElement("canvas"); c.width = o.w; c.height = o.h;
+      var g = c.getContext("2d");
+      if (o.bg) { roundRect(g, 6, 6, o.w - 12, o.h - 12, o.r); g.fillStyle = o.bg; g.fill(); }
+      if (o.border) { g.lineWidth = 12; g.strokeStyle = o.border; g.stroke(); }
+      g.fillStyle = o.fg; g.textAlign = "center"; g.textBaseline = "middle";
+      g.font = "bold " + o.size + "px " + FONT;
+      var maxW = o.w - 50, size = o.size;
+      while (g.measureText(text).width > maxW && size > 20) { size -= 4; g.font = "bold " + size + "px " + FONT; }
+      g.fillText(text, o.w / 2, o.h / 2 + 4);
+      var t = new THREE.CanvasTexture(c); t.anisotropy = 4;
+      return t;
+    }
+
+    // --- 光 ---
+    var hemi = new THREE.HemisphereLight(0xfff6e8, 0xd9b48c, 0.5);
+    scene.add(hemi);
+    var sun = new THREE.DirectionalLight(0xfff1dc, 0.45);
+    sun.position.set(7, 13, 9);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -10; sun.shadow.camera.right = 10; sun.shadow.camera.top = 10; sun.shadow.camera.bottom = -10;
+    sun.shadow.camera.near = 1; sun.shadow.camera.far = 40;
+    sun.shadow.bias = -0.0008;
+    sun.shadow.radius = 3;
+    scene.add(sun);
+    var amb = new THREE.AmbientLight(0xffffff, 0.08);
+    scene.add(amb);
+    var lamp = new THREE.PointLight(0xffc98a, 0, 14);
+    lamp.position.set(0, 3.6, 0);
+    scene.add(lamp);
+
+    var room = new THREE.Group();
+    scene.add(room);
+
+    // --- 木の床 ---
+    var floorTex = (function () {
+      var c = document.createElement("canvas"); c.width = 512; c.height = 512;
+      var g = c.getContext("2d");
+      var tones = ["#e2b47d", "#d9a76d", "#e8be8a", "#dcae76", "#d4a068"];
+      var ph = 64;
+      for (var row = 0; row < 512 / ph; row++) {
+        var off = (row % 2) * 160;
+        for (var x = -off; x < 512; x += 320) {
+          g.fillStyle = tones[(row * 3 + Math.floor((x + 512) / 320)) % tones.length];
+          g.fillRect(x, row * ph, 320, ph);
+          g.fillStyle = "rgba(120,72,30,.22)"; g.fillRect(x, row * ph, 3, ph);
+        }
+        g.fillStyle = "rgba(120,72,30,.25)"; g.fillRect(0, row * ph, 512, 3);
+        g.strokeStyle = "rgba(150,95,45,.10)"; g.lineWidth = 2;
+        for (var k = 0; k < 3; k++) { g.beginPath(); g.moveTo(0, row * ph + 16 + k * 14); g.bezierCurveTo(170, row * ph + 10 + k * 14, 340, row * ph + 24 + k * 14, 512, row * ph + 14 + k * 14); g.stroke(); }
+      }
+      var t = new THREE.CanvasTexture(c);
+      t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 2.5); t.anisotropy = 8;
+      return t;
+    })();
+    var floor = mesh(new THREE.BoxGeometry(12, 0.3, 10), new THREE.MeshToonMaterial({ map: floorTex, gradientMap: grad }), 0, -0.15, 0);
+    floor.castShadow = false;
+    room.add(floor);
+    room.add(mesh(new THREE.BoxGeometry(12.02, 0.3, 10.02), mat("#c48b55"), 0, -0.46, 0, false));
+
+    // --- 2面の壁 ---
+    var wallMat = mat("#fbf0e2"), wainMat = mat("#f6d9bf"), baseMat = mat("#c88d57");
+    room.add(mesh(new THREE.BoxGeometry(12.3, 4.4, 0.3), wallMat, -0.15, 2.2, -5.15));
+    room.add(mesh(new THREE.BoxGeometry(0.3, 4.4, 10), wallMat, -6.15, 2.2, 0));
+    room.add(mesh(new THREE.BoxGeometry(12, 1.1, 0.04), wainMat, 0, 0.55, -4.98));
+    room.add(mesh(new THREE.BoxGeometry(0.04, 1.1, 10), wainMat, -5.98, 0.55, 0));
+    room.add(mesh(new THREE.BoxGeometry(12, 0.08, 0.08), baseMat, 0, 1.12, -4.96));
+    room.add(mesh(new THREE.BoxGeometry(0.08, 0.08, 10), baseMat, -5.96, 1.12, 0));
+    room.add(mesh(new THREE.BoxGeometry(12.3, 0.16, 0.42), baseMat, -0.15, 4.42, -5.15));
+    room.add(mesh(new THREE.BoxGeometry(0.42, 0.16, 10), baseMat, -6.15, 4.42, 0));
+
+    // --- 窓（空の色が日本時間で変わる） ---
+    var skyCanvas = document.createElement("canvas"); skyCanvas.width = 512; skyCanvas.height = 320;
+    var skyTex = new THREE.CanvasTexture(skyCanvas);
+    var win = new THREE.Group();
+    win.position.set(2.5, 2.55, -4.97);
+    room.add(win);
+    var skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2), new THREE.MeshBasicMaterial({ map: skyTex }));
+    win.add(skyPlane);
+    var frameMat = mat("#ffffff");
+    [[0, 1.05, 3.5, 0.14], [0, -1.05, 3.5, 0.14], [-1.68, 0, 0.14, 2.2], [1.68, 0, 0.14, 2.2], [0, 0, 0.08, 2], [0, 0, 3.2, 0.08]].forEach(function (f) {
+      win.add(mesh(new THREE.BoxGeometry(f[2], f[3], 0.12), frameMat, f[0], f[1], 0.04));
+    });
+    win.add(mesh(new THREE.BoxGeometry(3.8, 0.1, 0.4), mat("#e9c49b"), 0, -1.16, 0.18));
+    // カーテン
+    var curtainMat = mat("#ffd7b3");
+    [-2.05, 2.05].forEach(function (x) {
+      var cg = new THREE.Group();
+      for (var i = 0; i < 4; i++) cg.add(mesh(new THREE.CylinderGeometry(0.1, 0.13, 2.5, 10), curtainMat, (i - 1.5) * 0.15, 0, 0.1));
+      cg.position.set(x, 0.05, 0.08);
+      win.add(cg);
+    });
+    win.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, 4.8, 8), baseMat, 0, 1.32, 0.12).rotateZ(Math.PI / 2));
+
+    var skyNow = null;
+    function drawSky() {
+      var j = jst(), h = j.h + j.mi / 60;
+      var phase = (h >= 5 && h < 9) ? "morning" : (h >= 9 && h < 16) ? "day" : (h >= 16 && h < 19) ? "evening" : "night";
+      if (phase === skyNow) return phase;
+      skyNow = phase;
+      var g = skyCanvas.getContext("2d"), W = 512, H = 320;
+      var c = { morning: ["#a9d8f5", "#ffe0bd"], day: ["#5fb8ee", "#cfeeff"], evening: ["#7d6fbf", "#ffad73"], night: ["#16224a", "#3a4a80"] }[phase];
+      var lg = g.createLinearGradient(0, 0, 0, H); lg.addColorStop(0, c[0]); lg.addColorStop(1, c[1]);
+      g.fillStyle = lg; g.fillRect(0, 0, W, H);
+      function cloud(x, y, s, a) { g.fillStyle = "rgba(255,255,255," + a + ")"; [[0, 0, 26], [28, -10, 32], [60, 0, 26], [30, 8, 28]].forEach(function (p) { g.beginPath(); g.arc(x + p[0] * s, y + p[1] * s, p[2] * s, 0, Math.PI * 2); g.fill(); }); }
+      if (phase === "night") {
+        for (var i = 0; i < 70; i++) { g.fillStyle = "rgba(255,255,230," + (0.4 + Math.random() * 0.6) + ")"; g.beginPath(); g.arc(Math.random() * W, Math.random() * H * 0.8, Math.random() * 1.8 + 0.4, 0, Math.PI * 2); g.fill(); }
+        g.fillStyle = "#fff3c4"; g.beginPath(); g.arc(380, 80, 34, 0, Math.PI * 2); g.fill();
+        g.fillStyle = c[0]; g.beginPath(); g.arc(396, 70, 30, 0, Math.PI * 2); g.fill();
+      } else {
+        var sunPos = { morning: [110, 210, "#fff2b0"], day: [400, 70, "#fff7c8"], evening: [260, 250, "#ffcf7a"] }[phase];
+        g.fillStyle = sunPos[2]; g.beginPath(); g.arc(sunPos[0], sunPos[1], 34, 0, Math.PI * 2); g.fill();
+        cloud(60, 90, 1.2, phase === "evening" ? 0.55 : 0.9); cloud(300, 160, 0.9, phase === "evening" ? 0.45 : 0.85); cloud(420, 240, 0.7, 0.6);
+      }
+      // 遠くの街並み
+      g.fillStyle = phase === "night" ? "#24305c" : (phase === "evening" ? "#8a6aa0" : "#bcd9c9");
+      [[0, 240, 70, 80], [60, 210, 50, 110], [110, 250, 80, 70], [190, 220, 40, 100], [230, 260, 90, 60], [320, 200, 60, 120], [380, 245, 70, 75], [450, 225, 62, 95]].forEach(function (b) { g.fillRect(b[0], b[1], b[2], b[3]); });
+      if (phase === "night") { g.fillStyle = "#ffe08a"; for (var k = 0; k < 40; k++) g.fillRect(Math.random() * W, 215 + Math.random() * 100, 5, 6); }
+      skyTex.needsUpdate = true;
+      // 部屋の明るさも時間で少し変える
+      var L = { morning: [0.5, 0.45, 0.0, 0xfff1dc], day: [0.52, 0.48, 0.0, 0xffffff], evening: [0.42, 0.36, 0.35, 0xffd2a6], night: [0.3, 0.18, 0.7, 0xc9d4ff] }[phase];
+      hemi.intensity = L[0]; sun.intensity = L[1]; lamp.intensity = L[2]; sun.color.setHex(L[3]);
+      return phase;
+    }
+    drawSky();
+
+    // --- 会社名の看板（左の壁） ---
+    var signTex = (function () {
+      var c = document.createElement("canvas"); c.width = 1024; c.height = 256;
+      var g = c.getContext("2d");
+      roundRect(g, 8, 8, 1008, 240, 60); g.fillStyle = "#fffaf2"; g.fill(); g.lineWidth = 14; g.strokeStyle = "#e89b4f"; g.stroke();
+      // 肉球
+      g.fillStyle = "#e89b4f";
+      g.beginPath(); g.ellipse(120, 148, 40, 34, 0, 0, Math.PI * 2); g.fill();
+      [[78, 92, 14], [106, 74, 15], [138, 74, 15], [164, 94, 14]].forEach(function (p) { g.beginPath(); g.arc(p[0], p[1], p[2], 0, Math.PI * 2); g.fill(); });
+      g.fillStyle = "#4a3426"; g.textAlign = "center"; g.textBaseline = "middle";
+      var size = 104; g.font = "bold " + size + "px " + FONT;
+      while (g.measureText(DATA.company).width > 760 && size > 40) { size -= 4; g.font = "bold " + size + "px " + FONT; }
+      g.fillText(DATA.company, 590, 134);
+      var t = new THREE.CanvasTexture(c); t.anisotropy = 8; return t;
+    })();
+    var signBoard = new THREE.Group();
+    signBoard.add(mesh(new THREE.BoxGeometry(0.1, 1.0, 3.9), mat("#c88d57"), -0.04, 0, 0));
+    var signFace = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 0.95), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
+    signFace.rotation.y = Math.PI / 2; signFace.position.x = 0.02;
+    signBoard.add(signFace);
+    signBoard.position.set(-5.96, 3.15, -0.6);
+    room.add(signBoard);
+
+    // --- 壁時計（日本時間で動く） ---
+    var clock = new THREE.Group();
+    clock.position.set(-1.6, 3.15, -4.96);
+    room.add(clock);
+    var faceTex = (function () {
+      var c = document.createElement("canvas"); c.width = 256; c.height = 256;
+      var g = c.getContext("2d");
+      g.fillStyle = "#fffaf2"; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#4a3426"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = "bold 30px " + FONT;
+      for (var i = 1; i <= 12; i++) { var a = i / 12 * Math.PI * 2; g.fillText(String(i), 128 + Math.sin(a) * 96, 128 - Math.cos(a) * 96); }
+      return new THREE.CanvasTexture(c);
+    })();
+    clock.add(mesh(new THREE.TorusGeometry(0.52, 0.07, 12, 40), mat("#e89b4f"), 0, 0, 0.05));
+    clock.add(new THREE.Mesh(new THREE.CircleGeometry(0.52, 40), new THREE.MeshBasicMaterial({ map: faceTex })).translateZ(0.03));
+    function hand(len, w, color, z) {
+      var p = new THREE.Group(); p.position.z = z;
+      var m = new THREE.Mesh(new THREE.BoxGeometry(w, len, 0.015), new THREE.MeshBasicMaterial({ color: color }));
+      m.position.y = len / 2 - 0.05; p.add(m); clock.add(p); return p;
+    }
+    var hHand = hand(0.28, 0.05, 0x4a3426, 0.05), mHand = hand(0.4, 0.035, 0x4a3426, 0.06), sHand = hand(0.44, 0.015, 0xe0603c, 0.07);
+    clock.add(new THREE.Mesh(new THREE.CircleGeometry(0.035, 16), new THREE.MeshBasicMaterial({ color: 0xe0603c })).translateZ(0.08));
+    function tickClock() {
+      var j = jst(), s = j.s + j.ms / 1000, m = j.mi + s / 60, h = (j.h % 12) + m / 60;
+      sHand.rotation.z = -s / 60 * Math.PI * 2; mHand.rotation.z = -m / 60 * Math.PI * 2; hHand.rotation.z = -h / 12 * Math.PI * 2;
+    }
+
+    // --- 観葉植物 ---
+    function plant(scale, leafColors) {
+      var g = new THREE.Group();
+      g.add(mesh(new THREE.CylinderGeometry(0.34, 0.26, 0.55, 20), mat("#d9825b"), 0, 0.275, 0));
+      g.add(mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.08, 20), mat("#c56f4a"), 0, 0.56, 0));
+      g.add(mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.7, 8), mat("#8a6a45"), 0, 0.9, 0));
+      [[0, 1.35, 0, 0.42], [0.28, 1.1, 0.1, 0.32], [-0.26, 1.15, -0.05, 0.33], [0.05, 1.12, 0.3, 0.3], [-0.05, 1.7, 0.05, 0.3], [0.12, 1.05, -0.28, 0.28]].forEach(function (p, i) {
+        g.add(mesh(new THREE.SphereGeometry(p[3], 16, 12), mat(leafColors[i % leafColors.length]), p[0], p[1], p[2]));
+      });
+      g.scale.setScalar(scale);
+      return g;
+    }
+    var bigPlant = plant(1.25, ["#7cc49a", "#68b588", "#93d3ab"]);
+    bigPlant.position.set(-5.2, 0, -4.2); room.add(bigPlant);
+    var plant2 = plant(0.95, ["#8fd3b6", "#74c2a0"]);
+    plant2.position.set(5.2, 0, -4.3); room.add(plant2);
+    var plant3 = plant(0.85, ["#7cc49a", "#a3dbb9"]);
+    plant3.position.set(-5.3, 0, 4.2); room.add(plant3);
+    var sill = plant(0.35, ["#8fd3b6"]);
+    sill.position.set(3.6, 1.44, -4.78); room.add(sill);
+
+    // --- ラグ ---
+    var rug = mesh(new THREE.CylinderGeometry(3.4, 3.4, 0.03, 48), mat("#fbd9bd"), 0.1, 0.015, -0.4);
+    rug.scale.z = 0.75; rug.castShadow = false; room.add(rug);
+    var rug2 = mesh(new THREE.CylinderGeometry(2.9, 2.9, 0.035, 48), mat("#fde7d3"), 0.1, 0.02, -0.4);
+    rug2.scale.z = 0.75; rug2.castShadow = false; room.add(rug2);
+
+    // --- 机・椅子・ノートPC ---
+    var woodTop = mat("#e0b07a"), woodLeg = mat("#b98450");
+    function desk(w, d) {
+      var g = new THREE.Group();
+      g.add(mesh(new THREE.BoxGeometry(w, 0.1, d), woodTop, 0, 0.95, 0));
+      [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (s) {
+        g.add(mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.9, 10), woodLeg, s[0] * (w / 2 - 0.1), 0.45, s[1] * (d / 2 - 0.1)));
+      });
+      g.add(mesh(new THREE.BoxGeometry(0.5, 0.45, d - 0.15), mat("#f3d2ac"), w / 2 - 0.35, 0.65, 0));
+      return g;
+    }
+    function screenTex(on) {
+      var c = document.createElement("canvas"); c.width = 256; c.height = 512;
+      var g = c.getContext("2d");
+      g.fillStyle = on ? "#dff1ff" : "#3b3b46"; g.fillRect(0, 0, 256, 512);
+      if (on) {
+        for (var i = 0; i < 24; i++) {
+          g.fillStyle = ["#9ccbe8", "#f2b27a", "#a7d9bf"][i % 3];
+          g.fillRect(24, 14 + i * 21, 60 + ((i * 53) % 150), 9);
+        }
+      }
+      var t = new THREE.CanvasTexture(c); t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 0.5);
+      return t;
+    }
+    function laptop(on) {
+      var g = new THREE.Group();
+      g.add(mesh(new THREE.BoxGeometry(0.72, 0.04, 0.5), mat("#eef0f4"), 0, 0.02, 0));
+      g.add(mesh(new THREE.BoxGeometry(0.6, 0.006, 0.22), mat("#c9ccd4"), 0, 0.043, -0.06));
+      var lid = new THREE.Group(); lid.position.set(0, 0.04, 0.24); lid.rotation.x = -0.28;
+      lid.add(mesh(new THREE.BoxGeometry(0.72, 0.48, 0.03), mat("#eef0f4"), 0, 0.24, 0));
+      var st = screenTex(on);
+      var scr = new THREE.Mesh(new THREE.PlaneGeometry(0.64, 0.4), new THREE.MeshBasicMaterial({ map: st }));
+      scr.position.set(0, 0.25, -0.017); scr.rotation.y = Math.PI; lid.add(scr);
+      // ふたの肉球ロゴ
+      var logo = new THREE.Mesh(new THREE.CircleGeometry(0.05, 16), new THREE.MeshBasicMaterial({ color: 0xe89b4f }));
+      logo.position.set(0, 0.25, 0.017); lid.add(logo);
+      g.add(lid);
+      g.userData.screen = st;
+      return g;
+    }
+    function chair(color) {
+      var g = new THREE.Group();
+      var c = mat(color);
+      g.add(mesh(new THREE.CylinderGeometry(0.36, 0.34, 0.12, 24), c, 0, 0.56, 0));
+      g.add(mesh(new THREE.BoxGeometry(0.66, 0.62, 0.12), c, 0, 0.98, -0.34));
+      g.add(mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.42, 8), mat("#9a9aa6"), 0, 0.3, 0));
+      for (var i = 0; i < 5; i++) {
+        var a = i / 5 * Math.PI * 2;
+        var leg = mesh(new THREE.BoxGeometry(0.06, 0.04, 0.34), mat("#9a9aa6"), Math.sin(a) * 0.16, 0.07, Math.cos(a) * 0.16);
+        leg.rotation.y = a; g.add(leg);
+        g.add(mesh(new THREE.SphereGeometry(0.045, 8, 6), mat("#5d5d68"), Math.sin(a) * 0.32, 0.045, Math.cos(a) * 0.32));
+      }
+      return g;
+    }
+    function deskSign(text, bg, fg, border) {
+      var g = new THREE.Group();
+      var tex = textTex(text, { w: 512, h: 220, bg: bg, fg: fg, size: 108, r: 36, border: border });
+      var face = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+      var side = mat("#ffffff");
+      var board = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.29, 0.02), [side, side, side, side, face, face]);
+      board.position.y = 0.17; board.rotation.x = -0.22; board.castShadow = true;
+      g.add(board);
+      g.add(mesh(new THREE.BoxGeometry(0.5, 0.03, 0.14), mat("#c88d57"), 0, 0.015, 0.02));
+      return g;
+    }
+
+    // 社長の席（左奥）
+    var bossDesk = new THREE.Group();
+    bossDesk.position.set(-2.4, 0, -2.2);
+    room.add(bossDesk);
+    bossDesk.add(desk(2.3, 1.1));
+    var bossLap = laptop(true); bossLap.position.set(-0.3, 1.0, -0.12); bossDesk.add(bossLap);
+    var bossChair = chair("#f08e6a"); bossChair.position.set(-0.3, 0, -0.95); bossDesk.add(bossChair);
+    var bossSign = deskSign("社長", "#fff3e4", "#c0582f", "#f08e6a"); bossSign.position.set(-0.85, 1.0, 0.35); bossSign.rotation.y = 0.35; bossDesk.add(bossSign);
+    var mug = new THREE.Group();
+    mug.add(mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.15, 16), mat("#ffffff"), 0, 0.075, 0));
+    mug.add(mesh(new THREE.TorusGeometry(0.04, 0.012, 8, 16), mat("#ffffff"), 0.075, 0.08, 0));
+    mug.add(mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.01, 16), mat("#7a4a2a"), 0, 0.145, 0));
+    mug.position.set(-0.95, 1.0, -0.2); bossDesk.add(mug);
+
+    // 報告書トレー（クリックで今日の見出し）
+    var tray = new THREE.Group();
+    tray.position.set(0.55, 1.0, 0.05);
+    tray.rotation.y = -0.15;
+    bossDesk.add(tray);
+    var trayMat = mat("#f2b880");
+    tray.add(mesh(new THREE.BoxGeometry(0.62, 0.03, 0.78), trayMat, 0, 0.015, 0));
+    [[0, 0.06, 0.38, 0.62, 0.1, 0.03], [0, 0.06, -0.38, 0.62, 0.1, 0.03], [0.3, 0.06, 0, 0.03, 0.1, 0.78], [-0.3, 0.06, 0, 0.03, 0.1, 0.78]].forEach(function (b) {
+      tray.add(mesh(new THREE.BoxGeometry(b[3], b[4], b[5]), trayMat, b[0], b[1], b[2]));
+    });
+    var paperTop = (function () {
+      var c = document.createElement("canvas"); c.width = 256; c.height = 340;
+      var g = c.getContext("2d");
+      g.fillStyle = "#ffffff"; g.fillRect(0, 0, 256, 340);
+      g.fillStyle = "#e89b4f"; g.fillRect(0, 0, 256, 50);
+      g.fillStyle = "#ffffff"; g.font = "bold 30px " + FONT; g.textAlign = "center"; g.fillText("報告書", 128, 36);
+      g.fillStyle = "#e6d9c8"; for (var i = 0; i < 8; i++) g.fillRect(28, 80 + i * 30, 200 - (i % 3) * 30, 10);
+      return new THREE.CanvasTexture(c);
+    })();
+    var paperMat = mat("#ffffff");
+    for (var pi = 0; pi < news.length; pi++) {
+      var sheet = mesh(new THREE.BoxGeometry(0.46, 0.024, 0.62), paperMat, (pi % 2 ? 0.015 : -0.01), 0.045 + pi * 0.03, (pi % 3 - 1) * 0.012);
+      sheet.rotation.y = (pi % 2 ? 0.06 : -0.05);
+      tray.add(sheet);
+      if (pi === news.length - 1) {
+        var top = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.6), new THREE.MeshBasicMaterial({ map: paperTop }));
+        top.rotation.x = -Math.PI / 2; top.position.y = 0.013;
+        sheet.add(top);
+      }
+    }
+    var trayHit = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.95), new THREE.MeshBasicMaterial({ visible: false }));
+    trayHit.position.y = 0.2; tray.add(trayHit);
+    tray.userData.click = "reports";
+    // 件数バッジ（ふわふわ浮く）
+    var badge = null;
+    if (STATE === "reported") {
+      var bt = (function () {
+        var c = document.createElement("canvas"); c.width = 256; c.height = 256;
+        var g = c.getContext("2d");
+        g.fillStyle = "#e0603c"; g.beginPath(); g.arc(128, 128, 116, 0, Math.PI * 2); g.fill();
+        g.lineWidth = 14; g.strokeStyle = "#ffffff"; g.stroke();
+        g.fillStyle = "#fff"; g.font = "bold 150px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(news.length), 128, 140);
+        return new THREE.CanvasTexture(c);
+      })();
+      badge = new THREE.Sprite(new THREE.SpriteMaterial({ map: bt, depthTest: false }));
+      badge.scale.set(0.42, 0.42, 1); badge.position.set(0, 0.85, 0); badge.renderOrder = 5;
+      tray.add(badge);
+    }
+
+    // 社員の席（右奥・窓ぎわ）
+    var empDesk = new THREE.Group();
+    empDesk.position.set(2.5, 0, -2.0);
+    room.add(empDesk);
+    empDesk.add(desk(1.8, 0.95));
+    var working = STATE !== "before";
+    var empLap = laptop(working); empLap.position.set(0, 1.0, -0.15); empDesk.add(empLap);
+    var empChair = chair("#f6b26b"); empChair.position.set(0, 0, -0.9); empDesk.add(empChair);
+    var cupE = mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.13, 14), mat("#8fd3b6"), -0.62, 1.065, 0.1); empDesk.add(cupE);
+    var bone = new THREE.Group();
+    bone.add(mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.2, 8), mat("#fff4e2"), 0, 0, 0).rotateZ(Math.PI / 2));
+    [[-0.1, 0.025], [-0.1, -0.025], [0.1, 0.025], [0.1, -0.025]].forEach(function (p) { bone.add(mesh(new THREE.SphereGeometry(0.035, 8, 6), mat("#fff4e2"), p[0], 0, p[1])); });
+    bone.position.set(0.6, 1.03, 0.15); bone.rotation.y = 0.5; empDesk.add(bone);
+    if (STATE === "before") {
+      var s1 = deskSign("出社前", "#eef3ff", "#4c5f91", "#9fb3e0"); s1.position.set(0.45, 1.0, 0.28); s1.rotation.y = 0.4; empDesk.add(s1);
+    } else if (STATE === "nonews") {
+      var s2 = deskSign("異常なし", "#e8f8ef", "#2f7a55", "#8fd3b6"); s2.position.set(0.5, 1.0, 0.28); s2.rotation.y = 0.4; empDesk.add(s2);
+    }
+
+    // 空いている席（左手前）
+    var vacDesk = new THREE.Group();
+    vacDesk.position.set(-2.8, 0, 2.4);
+    vacDesk.rotation.y = 0.0;
+    room.add(vacDesk);
+    vacDesk.add(desk(1.8, 0.95));
+    var vacChair = chair("#cfe6da"); vacChair.position.set(0, 0, -0.9); vacChair.rotation.y = 0.5; vacDesk.add(vacChair);
+    var vs = deskSign("募集中", "#fff8d6", "#9a6b00", "#f3cf5a"); vs.position.set(0.15, 1.0, 0.2); vs.rotation.y = 0.45; vacDesk.add(vs);
+
+    // ---------------- ニュースくん（メガネの柴犬） ----------------
+    var shiba = new THREE.Group();
+    var OR = mat("#e89b4f"), CR = mat("#fff4e2"), BK = mat("#2b2b2b"), GL = mat("#5b3a29");
+    var body = new THREE.Group(); shiba.add(body);
+    var torso = mesh(new THREE.SphereGeometry(0.38, 24, 18), OR, 0, 0.98, 0); torso.scale.set(1, 1.1, 0.9); body.add(torso);
+    var belly = mesh(new THREE.SphereGeometry(0.28, 20, 16), CR, 0, 0.94, 0.17); belly.scale.set(1, 1.15, 0.65); body.add(belly);
+    // 足（座っている）
+    [-1, 1].forEach(function (s) {
+      var thigh = mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.42, 12), OR, s * 0.17, 0.7, 0.22); thigh.rotation.x = Math.PI / 2; body.add(thigh);
+      body.add(mesh(new THREE.SphereGeometry(0.11, 12, 10), CR, s * 0.17, 0.66, 0.45));
+    });
+    // しっぽ（くるん）
+    var tail = new THREE.Group(); tail.position.set(0, 1.0, -0.36); body.add(tail);
+    var tailRing = mesh(new THREE.TorusGeometry(0.12, 0.06, 10, 20, Math.PI * 1.5), OR, 0, 0.1, 0); tailRing.rotation.y = Math.PI / 2; tail.add(tailRing);
+    tail.add(mesh(new THREE.SphereGeometry(0.065, 10, 8), CR, 0, 0.22, -0.02));
+    // 腕（キーボードへ）
+    var arms = [];
+    [-1, 1].forEach(function (s) {
+      var pivot = new THREE.Group(); pivot.position.set(s * 0.3, 1.17, 0.1); body.add(pivot);
+      var arm = mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.48, 12), OR, 0, 0, 0.24); arm.rotation.x = Math.PI / 2; pivot.add(arm);
+      pivot.add(mesh(new THREE.SphereGeometry(0.09, 12, 10), CR, 0, 0, 0.5));
+      pivot.rotation.set(0.28, -s * 0.18, 0);
+      arms.push(pivot);
+    });
+    // 頭
+    var head = new THREE.Group(); head.position.set(0, 1.62, 0.04); shiba.add(head);
+    var skull = mesh(new THREE.SphereGeometry(0.37, 26, 20), OR, 0, 0, 0); skull.scale.set(1.05, 0.95, 1); head.add(skull);
+    var muzzle = mesh(new THREE.SphereGeometry(0.18, 18, 14), CR, 0, -0.1, 0.27); muzzle.scale.set(1.25, 0.85, 1); head.add(muzzle);
+    [-1, 1].forEach(function (s) { head.add(mesh(new THREE.SphereGeometry(0.14, 14, 12), CR, s * 0.18, -0.13, 0.2)); });
+    head.add(mesh(new THREE.SphereGeometry(0.055, 12, 10), BK, 0, -0.04, 0.45));
+    var smile = mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 16, Math.PI), BK, 0, -0.14, 0.42, false); smile.rotation.z = Math.PI; head.add(smile);
+    var eyes = [];
+    [-1, 1].forEach(function (s) {
+      var e = new THREE.Group(); e.position.set(s * 0.135, 0.05, 0.31);
+      var eb = mesh(new THREE.SphereGeometry(0.048, 12, 10), BK, 0, 0, 0, false); eb.scale.z = 0.6; e.add(eb);
+      e.add(mesh(new THREE.SphereGeometry(0.014, 8, 6), mat("#ffffff"), 0.015, 0.018, 0.03, false));
+      head.add(e); eyes.push(e);
+    });
+    var brows = [];
+    [-1, 1].forEach(function (s) {
+      var b = mesh(new THREE.SphereGeometry(0.042, 10, 8), CR, s * 0.13, 0.17, 0.3, false); b.scale.set(1.4, 0.7, 0.5); head.add(b); brows.push(b);
+    });
+    // メガネ
+    [-1, 1].forEach(function (s) {
+      var ring = mesh(new THREE.TorusGeometry(0.09, 0.014, 8, 28), GL, s * 0.135, 0.05, 0.355, false); head.add(ring);
+      var lens = new THREE.Mesh(new THREE.CircleGeometry(0.085, 24), new THREE.MeshBasicMaterial({ color: 0xdff1ff, transparent: true, opacity: 0.25 }));
+      lens.position.set(s * 0.135, 0.05, 0.356); head.add(lens);
+      var temple = mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.3, 6), GL, s * 0.235, 0.06, 0.2, false); temple.rotation.x = Math.PI / 2; temple.rotation.z = s * 0.25; head.add(temple);
+    });
+    var bridge = mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.08, 6), GL, 0, 0.07, 0.37, false); bridge.rotation.z = Math.PI / 2; head.add(bridge);
+    // 耳
+    [-1, 1].forEach(function (s) {
+      var ear = new THREE.Group(); ear.position.set(s * 0.2, 0.3, -0.02); ear.rotation.z = -s * 0.32; head.add(ear);
+      ear.add(mesh(new THREE.ConeGeometry(0.13, 0.26, 16), OR, 0, 0.1, 0));
+      var inner = mesh(new THREE.ConeGeometry(0.075, 0.17, 12), CR, 0, 0.08, 0.05, false); inner.scale.z = 0.5; ear.add(inner);
+    });
+    // 困ったとき用：汗
+    var sweat = new THREE.Group();
+    sweat.add(mesh(new THREE.SphereGeometry(0.05, 12, 10), mat("#8fc8f2"), 0, 0, 0, false));
+    var tip = mesh(new THREE.ConeGeometry(0.05, 0.08, 12), mat("#8fc8f2"), 0, 0.055, 0, false); sweat.add(tip);
+    sweat.position.set(0.36, 0.12, 0.12); sweat.visible = false; head.add(sweat);
+
+    if (STATE === "failed") {
+      sweat.visible = true;
+      smile.rotation.z = 0; smile.position.y = -0.17;              // への字口
+      brows[0].rotation.z = -0.5; brows[1].rotation.z = 0.5;       // 八の字まゆ
+      brows[0].position.y = brows[1].position.y = 0.19;
+    }
+
+    shiba.position.set(0, 0, -0.98);
+    shiba.scale.setScalar(1.12);
+    empDesk.add(shiba);
+    shiba.visible = working;
+    shiba.userData.click = "employee";
+
+    // ---------------- カメラ操作 ----------------
+    var TARGET = new THREE.Vector3(0, 1.2, -0.6);
+    var AZ_MIN = -0.12, AZ_MAX = 1.68;
+    var controls, usingOrbit = !!THREE.OrbitControls;
+    var lastInteract = performance.now() - 10000, dragging = false;
+    if (usingOrbit) {
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.target.copy(TARGET);
+      controls.enableDamping = true; controls.dampingFactor = 0.08;
+      controls.enablePan = false;
+      controls.minDistance = 8; controls.maxDistance = 50;
+      controls.minPolarAngle = 0.35; controls.maxPolarAngle = 1.32;
+      controls.minAzimuthAngle = AZ_MIN; controls.maxAzimuthAngle = AZ_MAX;
+      controls.rotateSpeed = 0.6; controls.zoomSpeed = 0.8;
+      controls.addEventListener("start", function () { dragging = true; });
+      controls.addEventListener("end", function () { dragging = false; lastInteract = performance.now(); });
+    } else {
+      // OrbitControls が読み込めないときの簡単な回転・拡大
+      controls = (function () {
+        var off = camera.position.clone().sub(TARGET);
+        var st = { r: off.length(), th: Math.atan2(off.x, off.z), ph: Math.acos(off.y / off.length()) };
+        var el = renderer.domElement, down = null;
+        el.addEventListener("pointerdown", function (e) { down = { x: e.clientX, y: e.clientY }; dragging = true; });
+        window.addEventListener("pointermove", function (e) {
+          if (!down) return;
+          st.th -= (e.clientX - down.x) * 0.006; st.ph -= (e.clientY - down.y) * 0.006;
+          down = { x: e.clientX, y: e.clientY };
+        });
+        window.addEventListener("pointerup", function () { if (down) { down = null; dragging = false; lastInteract = performance.now(); } });
+        el.addEventListener("wheel", function (e) { e.preventDefault(); st.r *= e.deltaY > 0 ? 1.08 : 0.92; lastInteract = performance.now(); }, { passive: false });
+        return {
+          target: TARGET,
+          getAzimuthalAngle: function () { return st.th; },
+          rotate: function (d) { st.th += d; },
+          update: function () {
+            st.th = Math.min(AZ_MAX, Math.max(AZ_MIN, st.th));
+            st.ph = Math.min(1.32, Math.max(0.35, st.ph));
+            st.r = Math.min(50, Math.max(8, st.r));
+            camera.position.set(TARGET.x + st.r * Math.sin(st.ph) * Math.sin(st.th), TARGET.y + st.r * Math.cos(st.ph), TARGET.z + st.r * Math.sin(st.ph) * Math.cos(st.th));
+            camera.lookAt(TARGET);
+          }
+        };
+      })();
+    }
+    // 画面サイズに合わせて最初の距離を調整（スマホでも全体が入るように）
+    function fitDistance() {
+      var a = window.innerWidth / window.innerHeight;
+      var half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      var d = Math.max(7.2 / (half * a), 5.2 / half); // 部屋の横幅と高さが入る距離
+      return Math.min(46, Math.max(15.5, d * 0.92));
+    }
+    (function () {
+      var dir = camera.position.clone().sub(TARGET).normalize();
+      camera.position.copy(TARGET).add(dir.multiplyScalar(fitDistance()));
+    })();
+    controls.update();
+
+    var autoDir = 1;
+    function autoRotate(dt) {
+      if (dragging || performance.now() - lastInteract < 3500) return;
+      var az = controls.getAzimuthalAngle();
+      if (az > AZ_MAX - 0.03) autoDir = -1;
+      if (az < AZ_MIN + 0.03) autoDir = 1;
+      var d = autoDir * dt * 0.06;
+      if (usingOrbit) {
+        var off = camera.position.clone().sub(controls.target);
+        off.applyAxisAngle(new THREE.Vector3(0, 1, 0), d);
+        camera.position.copy(controls.target).add(off);
+      } else controls.rotate(d);
+    }
+
+    // ---------------- クリック ----------------
+    var ray = new THREE.Raycaster(); ray.camera = camera;
+    var ptr = new THREE.Vector2(), downAt = null;
+    var clickables = [tray];
+    if (working) clickables.push(shiba);
+    function pick(e) {
+      var r = renderer.domElement.getBoundingClientRect();
+      ptr.x = ((e.clientX - r.left) / r.width) * 2 - 1; ptr.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+      ray.setFromCamera(ptr, camera); ray.camera = camera;
+      var hits = ray.intersectObjects(clickables, true);
+      for (var i = 0; i < hits.length; i++) {
+        var o = hits[i].object;
+        while (o && !o.userData.click) o = o.parent;
+        if (o) return o;
+      }
+      return null;
+    }
+    var hovered = null;
+    renderer.domElement.addEventListener("pointerdown", function (e) { downAt = { x: e.clientX, y: e.clientY }; });
+    renderer.domElement.addEventListener("pointerup", function (e) {
+      if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) { downAt = null; return; }
+      downAt = null;
+      var o = pick(e);
+      if (!o) return;
+      if (o.userData.click === "reports") openReports();
+      if (o.userData.click === "employee") openIdCard();
+    });
+    renderer.domElement.addEventListener("pointermove", function (e) {
+      if (e.buttons) return;
+      var o = pick(e);
+      if (o !== hovered) {
+        if (hovered) hovered.scale.setScalar(1);
+        hovered = o;
+        if (hovered) hovered.scale.setScalar(1.06);
+        renderer.domElement.style.cursor = o ? "pointer" : "grab";
+      }
+    });
+    renderer.domElement.style.cursor = "grab";
+
+    // ---------------- 名札と吹き出し ----------------
+    var tagEl = document.getElementById("nametag"), bubEl = document.getElementById("bubble");
+    tagEl.textContent = EMP.name || "ニュースくん";
+    if (working) {
+      tagEl.style.display = "block";
+      if (MESSAGE) { bubEl.textContent = MESSAGE; bubEl.style.display = "block"; if (STATE === "failed") bubEl.classList.add("trouble"); }
+    }
+    var v3 = new THREE.Vector3();
+    function placeLabels() {
+      if (!working) return;
+      shiba.localToWorld(v3.set(0, 2.25, 0));
+      v3.project(camera);
+      var x = (v3.x * 0.5 + 0.5) * window.innerWidth, y = (-v3.y * 0.5 + 0.5) * window.innerHeight;
+      var hide = v3.z > 1 || modal.classList.contains("open");
+      tagEl.style.visibility = bubEl.style.visibility = hide ? "hidden" : "visible";
+      var tx = Math.min(window.innerWidth - tagEl.offsetWidth - 6, Math.max(6, x - tagEl.offsetWidth / 2));
+      tagEl.style.transform = "translate(" + Math.round(tx) + "px," + Math.round(y - tagEl.offsetHeight) + "px)";
+      var bx = Math.max(8, Math.min(x + 34, window.innerWidth - bubEl.offsetWidth - 8));
+      bubEl.style.transform = "translate(" + Math.round(bx) + "px," + Math.round(y - tagEl.offsetHeight - bubEl.offsetHeight - 6) + "px)";
+    }
+
+    // ---------------- アニメーション ----------------
+    var clockT = new THREE.Clock();
+    var nextBlink = 1.5, blinkUntil = 0, skyTimer = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      var dt = Math.min(clockT.getDelta(), 0.05), t = clockT.elapsedTime;
+      autoRotate(dt);
+      controls.update();
+      tickClock();
+      skyTimer += dt; if (skyTimer > 20) { skyTimer = 0; drawSky(); }
+      if (working) {
+        var speed = STATE === "failed" ? 5 : STATE === "nonews" ? 7 : 14;
+        arms[0].rotation.x = 0.28 + Math.max(0, Math.sin(t * speed)) * 0.12;
+        arms[1].rotation.x = 0.28 + Math.max(0, Math.sin(t * speed + Math.PI)) * 0.12;
+        head.rotation.x = Math.sin(t * 1.6) * 0.03 + 0.08;
+        head.rotation.z = STATE === "failed" ? 0.12 + Math.sin(t * 1.2) * 0.03 : Math.sin(t * 0.9) * 0.04;
+        body.position.y = Math.sin(t * 2.2) * 0.008;
+        tail.rotation.z = Math.sin(t * (STATE === "failed" ? 2 : 9)) * (STATE === "failed" ? 0.08 : 0.35);
+        if (sweat.visible) sweat.position.y = 0.12 - ((t * 0.25) % 0.12);
+        if (t > nextBlink) { blinkUntil = t + 0.13; nextBlink = t + 2.2 + Math.random() * 3; }
+        var sy = t < blinkUntil ? 0.12 : 1;
+        eyes[0].scale.y = eyes[1].scale.y = sy;
+        var scr = empLap.userData.screen; scr.offset.y = (scr.offset.y + dt * (STATE === "failed" ? 0 : 0.05)) % 1;
+      }
+      if (badge) badge.position.y = 0.85 + Math.sin(t * 2.4) * 0.05;
+      renderer.render(scene, camera);
+      placeLabels();
+    }
+    window.addEventListener("resize", function () {
+      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    document.getElementById("loading").style.display = "none";
+    animate();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

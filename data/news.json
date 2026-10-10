@@ -1,0 +1,36 @@
+{
+  "company": "たなかAIカンパニー",
+  "employee": {
+    "name": "ニュースくん",
+    "role": "AIニュース担当",
+    "hours": "毎朝 7:00（日本時間）"
+  },
+  "updated_at": "2026-10-10T11:10:00+09:00",
+  "days": [
+    {
+      "date": "2026-10-10",
+      "status": "reported",
+      "checked_at": "2026-10-10T11:10:00+09:00",
+      "message": "社長！今日は2件です！どちらも飲食店に関係ありそうです！",
+      "report_file": "報告/2026-10-10_AIニュース.md",
+      "news": [
+        {
+          "headline": "AI料理写真、見抜けた人は1.5%",
+          "category": "image",
+          "published": "2026-10-09",
+          "source": "SOEL株式会社（PR TIMES プレスリリース）",
+          "url": "https://prtimes.jp/main/html/rd/p/000000005.000190796.html",
+          "verified": "search"
+        },
+        {
+          "headline": "国内ChatGPT利用者 推計2670万人",
+          "category": "chatgpt",
+          "published": "2026-10-09",
+          "source": "株式会社ヴァリューズ（PR TIMES プレスリリース）",
+          "url": "https://prtimes.jp/main/html/rd/p/000000231.000007396.html",
+          "verified": "search"
+        }
+      ]
+    }
+  ]
+}
