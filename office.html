@@ -19,6 +19,8 @@
     --navy-deep: #3f5f99;
     --gold: #e8c46a;
     --gold-deep: #9a7210;
+    --boss: #8d8f9e;
+    --boss-deep: #3b3d4a;
     --line: #f0dcc4;
     --off: #e6d9c8;
     --shadow: 0 6px 24px rgba(120, 72, 30, .16);
@@ -48,6 +50,8 @@
   .nametag.bull::before { content: "📋 "; }
   .nametag.kilt { border-color: var(--gold); }
   .nametag.kilt::before { content: "🧮 "; }
+  .nametag.boss { border-color: var(--boss-deep); background: var(--boss-deep); color: #fff; }
+  .nametag.boss::before { content: "社長 "; font-size: 11px; opacity: .8; }
   .bubble {
     background: var(--paper); color: var(--ink); border-radius: 16px; padding: 8px 14px;
     font-size: 14px; font-weight: 700; max-width: 240px; line-height: 1.45; box-shadow: var(--shadow);
@@ -85,6 +89,8 @@
   #hud .who .st.pink { color: var(--pink-deep); }
   #hud .who .st.navy { color: var(--navy-deep); }
   #hud .who .st.gold { color: var(--gold-deep); }
+  #hud .who .st.boss { color: var(--boss-deep); }
+  #hud .who.boss { margin-top: 4px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
   #hud .dot.today i { outline: 2px solid var(--ink-soft); outline-offset: 1px; }
   #hint {
     position: fixed; right: 14px; bottom: 12px; font-size: 11px; color: var(--ink-soft);
@@ -121,6 +127,13 @@
   .ncard.gold .ic { background: #fbf3dc; }
   .ncard .num { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
   .btn.gold { background: var(--gold-deep); }
+  .btn.boss { background: var(--boss-deep); }
+  .chorei-msg { background: var(--paper); border-left: 4px solid var(--boss-deep); border-radius: 10px; padding: 10px 12px; font-weight: 700; margin-bottom: 10px; }
+  .srow { display: flex; gap: 8px; align-items: baseline; background: var(--paper); border-radius: 12px; padding: 8px 12px; margin-bottom: 6px; font-size: 14px; }
+  .srow .mk { width: 22px; flex: none; text-align: center; }
+  .srow b { flex: none; min-width: 6.5em; }
+  .reqs { margin: 10px 0 4px; padding-left: 1.4em; font-size: 14px; }
+  .reqs li { margin-bottom: 4px; }
   .note { font-size: 12px; color: var(--ink-soft); margin: 4px 0 8px; }
   .ncard .sub { font-size: 12px; color: var(--ink-soft); }
   .ncard a { font-size: 12px; color: var(--shiba-deep); word-break: break-all; }
@@ -131,6 +144,7 @@
   .idcard.mochi { border-top-color: var(--pink); }
   .idcard.bull { border-top-color: var(--navy); }
   .idcard.kilt { border-top-color: var(--gold); }
+  .idcard.boss { border-top-color: var(--boss-deep); }
   .idcard dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 13px; }
   .idcard dt { color: var(--ink-soft); }
   .idcard dd { margin: 0; font-weight: 700; }
@@ -296,6 +310,56 @@
 }
 </script>
 <!--KEIRI_DATA_END-->
+<!-- ↓↓ 鋼社長（AI社長）の朝礼データ。data/chorei.json と完全に同じ内容をここに入れる（shacho が毎回置き換える） ↓↓ -->
+<!--CHOREI_DATA_START-->
+<script id="chorei-data" type="application/json">
+{
+  "company": "ワンワンAIカンパニー",
+  "president": {
+    "name": "鋼",
+    "role": "AI社長",
+    "hours": "毎朝 7:00（社員の仕事のあと）"
+  },
+  "updated_at": "2026-10-10T12:08:00+09:00",
+  "days": [
+    {
+      "date": "2026-10-10",
+      "status": "issues",
+      "checked_at": "2026-10-10T12:08:00+09:00",
+      "message": "……2代目。みんな、よくやった",
+      "file": "朝礼/2026-10-10_朝礼.md",
+      "staff": [
+        {
+          "name": "番犬がおがお",
+          "status": "ok",
+          "note": "ニュース2件"
+        },
+        {
+          "name": "もち",
+          "status": "ok",
+          "note": "投稿案3案"
+        },
+        {
+          "name": "ブル君",
+          "status": "ok",
+          "note": "やること3件"
+        },
+        {
+          "name": "キルト",
+          "status": "warn",
+          "note": "入力待ち（表が空）"
+        }
+      ],
+      "requests": [
+        "経理/入力の表に10月分の数字を書く",
+        "社長情報.mdにお店の情報を書く",
+        "社長情報.mdにスタッフと人数を書く"
+      ]
+    }
+  ]
+}
+</script>
+<!--CHOREI_DATA_END-->
 <!-- ↑↑ ここまでがデータ ↑↑ -->
 
 <script>
@@ -333,9 +397,9 @@
   var STATE_LABEL = { before: "出社前", reported: news.length + "件", nonews: "異常なし", failed: "検索失敗" };
   var DEFAULT_MSG = {
     before: "",
-    reported: "社長！今日は" + news.length + "件です！",
-    nonews: "社長！今日は新しいニュースはありません。異常なしです！",
-    failed: "社長、すみません…今日は検索がうまくいきませんでした"
+    reported: "2代目！今日は" + news.length + "件です！",
+    nonews: "2代目！今日は新しいニュースはありません。異常なしです！",
+    failed: "2代目、すみません…今日は検索がうまくいきませんでした"
   };
   var MESSAGE = (today && today.message) || DEFAULT_MSG[STATE];
   var CAT = {
@@ -358,8 +422,8 @@
   var SSTATE_LABEL = { before: "出社前", drafted: drafts.length + "案", failed: "作成失敗" };
   var SMESSAGE = (sToday && sToday.message) || {
     before: "",
-    drafted: "社長〜、今日の投稿案を" + drafts.length + "つご用意しましたよ〜",
-    failed: "社長、すみません…今日はうまく作れませんでした〜"
+    drafted: "2代目〜、今日の投稿案を" + drafts.length + "つご用意しましたよ〜",
+    failed: "2代目、すみません…今日はうまく作れませんでした〜"
   }[SSTATE];
   var PLAT = {
     instagram: { icon: "📷", label: "Instagram" },
@@ -380,8 +444,8 @@
   var JSTATE_LABEL = { before: "出社前", done: tasks.length + "件", failed: "作成失敗" };
   var JMESSAGE = (jToday && jToday.message) || {
     before: "",
-    done: "社長、今日の事務メモできましたで！やることは" + tasks.length + "つや",
-    failed: "社長、すんません…今日はうまいこと作れませんでした"
+    done: "2代目、今日の事務メモできましたで！やることは" + tasks.length + "つや",
+    failed: "2代目、すんません…今日はうまいこと作れませんでした"
   }[JSTATE];
   var KIND = {
     shift: { icon: "🗓️", label: "シフト" },
@@ -403,11 +467,20 @@
   function yen(n) { return (typeof n === "number" && isFinite(n)) ? Math.floor(n).toLocaleString("ja-JP") + "円" : "—"; }
   function man(n) { return (typeof n === "number" && isFinite(n)) ? (n >= 10000 ? (Math.floor(n / 1000) / 10).toLocaleString("ja-JP") + "万円" : yen(n)) : "—"; }
   var KSTATE_LABEL = { before: "出社前", done: ksum ? "売上 " + man(ksum.sales_total) : "", waiting: "入力待ち", failed: "計算失敗" };
+  // ---------- 鋼社長（AI社長）の朝礼データ ----------
+  var CDATA;
+  try { CDATA = JSON.parse(document.getElementById("chorei-data").textContent); } catch (e) { CDATA = { days: [] }; }
+  var CPRES = CDATA.president || { name: "鋼", role: "AI社長", hours: "毎朝 7:00（社員の仕事のあと）" };
+  var cToday = null;
+  (CDATA.days || []).forEach(function (d) { if (d.date === TODAY) cToday = d; });
+  var CSTATE = !cToday ? "before" : (cToday.status === "done" ? "done" : cToday.status === "issues" ? "issues" : "failed");
+  var CSTATE_LABEL = { before: "出社前", done: "朝礼済み・全員問題なし", issues: "朝礼済み・要確認あり", failed: "まとめ失敗" };
+  var CMESSAGE = (cToday && cToday.message) || { before: "", done: "……2代目。今日も、みんなよくやった", issues: "……2代目。確かめてほしいことがある", failed: "……すまん。今朝は、まとめられなかった" }[CSTATE];
   var KMESSAGE = (kToday && kToday.message) || {
     before: "",
-    done: "社長〜♡ 今月の売上、キルトがぴったり計算しましたぁ♪",
-    waiting: "社長〜、入力がまだなので、キルト待ってますぅ☆",
-    failed: "社長、ごめんなさぁい…今日はうまく計算できませんでした…"
+    done: "2代目〜♡ 今月の売上、キルトがぴったり計算しましたぁ♪",
+    waiting: "2代目〜、入力がまだなので、キルト待ってますぅ☆",
+    failed: "2代目、ごめんなさぁい…今日はうまく計算できませんでした…"
   }[KSTATE];
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -428,6 +501,7 @@
     var j = jst();
     var html = '<div class="co">' + esc(DATA.company) + '</div>';
     html += '<div class="date">' + j.y + "年" + j.m + "月" + j.d + "日（" + weekday(j.y, j.m, j.d) + "）</div>";
+    html += '<div class="who boss"><b>社長 ' + esc(CPRES.name) + '</b><span class="st boss">' + CSTATE_LABEL[CSTATE] + "</span></div>";
     if (STATE === "reported") html += '<div class="count"><span>今日</span><b>' + news.length + '</b><span>件</span></div>';
     else html += '<div class="count state"><span>今日</span><b>' + STATE_LABEL[STATE] + '</b></div>';
     html += '<div class="who"><b>🐕 ' + esc(EMP.name) + '</b><span class="st">' + (STATE === "reported" ? "ニュース " : "") + STATE_LABEL[STATE] + "</span></div>";
@@ -524,6 +598,32 @@
     var j = jst();
     openModal('<p class="mtitle">🧮 今月の売上と給料<small>' + j.m + "/" + j.d + "・" + KSTATE_LABEL[KSTATE] + "</small></p>" + keiriCardsHTML());
   }
+  function choreiFileLink() {
+    return encodeURI((cToday && cToday.file) || ("朝礼/" + TODAY + "_朝礼.md"));
+  }
+  function choreiHTML() {
+    var h = "";
+    if (cToday && CSTATE !== "failed") {
+      if (CMESSAGE) h += '<div class="chorei-msg">' + esc(CMESSAGE) + "</div>";
+      (cToday.staff || []).forEach(function (m) {
+        var mk = { ok: "✅", warn: "⚠️", absent: "💤" }[m.status] || "・";
+        h += '<div class="srow"><span class="mk">' + mk + "</span><b>" + esc(m.name) + "</b><span>" + esc(m.note) + "</span></div>";
+      });
+      if ((cToday.requests || []).length) {
+        h += '<div class="sub" style="margin-top:10px;font-weight:700">2代目へのお願い</div><ol class="reqs">';
+        cToday.requests.forEach(function (r) { h += "<li>" + esc(r) + "</li>"; });
+        h += "</ol>";
+      }
+    } else {
+      h += '<div class="empty">' + (CSTATE === "before" ? "🕖 鋼社長はまだ出社前です" : "😔 今朝は朝礼をまとめられませんでした") + "</div>";
+    }
+    if (cToday) h += '<a class="btn boss" href="' + choreiFileLink() + '" target="_blank">📜 朝礼を開く</a>';
+    return h;
+  }
+  function openChorei() {
+    var j = jst();
+    openModal('<p class="mtitle">📜 今日の朝礼<small>' + j.m + "/" + j.d + "・社長 " + esc(CPRES.name) + "</small></p>" + choreiHTML());
+  }
   var KILT_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><polygon points="10,14 34,40 20,52" fill="#e7b47c"/><polygon points="90,14 66,40 80,52" fill="#e7b47c"/><polygon points="16,24 30,40 22,46" fill="#f6c3cf"/><polygon points="84,24 70,40 78,46" fill="#f6c3cf"/><circle cx="50" cy="56" r="30" fill="#e7b47c"/><ellipse cx="50" cy="70" rx="13" ry="10" fill="#fbecd8"/><circle cx="38" cy="54" r="7" fill="#2b2b2b"/><circle cx="62" cy="54" r="7" fill="#2b2b2b"/><circle cx="40.5" cy="51" r="2.4" fill="#fff"/><circle cx="64.5" cy="51" r="2.4" fill="#fff"/><circle cx="36" cy="57" r="1.2" fill="#fff"/><circle cx="60" cy="57" r="1.2" fill="#fff"/><ellipse cx="28" cy="66" rx="5" ry="3" fill="#f3a9b9" opacity=".8"/><ellipse cx="72" cy="66" rx="5" ry="3" fill="#f3a9b9" opacity=".8"/><ellipse cx="50" cy="66" rx="3.6" ry="2.8" fill="#2b2b2b"/><path d="M46 72 Q50 75 54 72" stroke="#2b2b2b" stroke-width="1.8" fill="none"/><polygon points="58,30 70,24 70,36" fill="#ef7fa0"/><polygon points="82,30 70,24 70,36" fill="#ef7fa0"/><circle cx="70" cy="30" r="3.4" fill="#d9557e"/></svg>';
   var BULL_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><path d="M16 34 Q14 18 30 22 L34 36 Z" fill="#a8724c"/><path d="M84 34 Q86 18 70 22 L66 36 Z" fill="#a8724c"/><ellipse cx="50" cy="54" rx="38" ry="34" fill="#c8946a"/><path d="M50 22 L44 60 L56 60 Z" fill="#f3ece2"/><ellipse cx="34" cy="72" rx="18" ry="13" fill="#f3ece2"/><ellipse cx="66" cy="72" rx="18" ry="13" fill="#f3ece2"/><path d="M32 30 Q50 25 68 30" stroke="#8a5a3a" stroke-width="2" fill="none"/><path d="M36 36 Q50 32 64 36" stroke="#8a5a3a" stroke-width="2" fill="none"/><rect x="24" y="40" width="18" height="5" rx="2" fill="#3a2a22" transform="rotate(14 33 42)"/><rect x="58" y="40" width="18" height="5" rx="2" fill="#3a2a22" transform="rotate(-14 67 42)"/><circle cx="35" cy="51" r="3.6" fill="#2b2b2b"/><circle cx="65" cy="51" r="3.6" fill="#2b2b2b"/><ellipse cx="50" cy="62" rx="9" ry="6" fill="#2b2b2b"/><path d="M36 82 Q50 76 64 82" stroke="#2b2b2b" stroke-width="2.4" fill="none"/><polygon points="40,81 43,74 46,80" fill="#fff"/><polygon points="54,80 57,74 60,81" fill="#fff"/></svg>';
   var SHIBA_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><polygon points="18,40 26,8 46,28" fill="#e89b4f"/><polygon points="82,40 74,8 54,28" fill="#e89b4f"/><polygon points="24,32 28,16 38,28" fill="#fff4e2"/><polygon points="76,32 72,16 62,28" fill="#fff4e2"/><circle cx="50" cy="54" r="36" fill="#e89b4f"/><ellipse cx="50" cy="68" rx="24" ry="18" fill="#fff4e2"/><ellipse cx="38" cy="38" rx="4" ry="2.5" fill="#fff4e2"/><ellipse cx="62" cy="38" rx="4" ry="2.5" fill="#fff4e2"/><circle cx="38" cy="50" r="3.6" fill="#2b2b2b"/><circle cx="62" cy="50" r="3.6" fill="#2b2b2b"/><circle cx="38" cy="50" r="9" fill="none" stroke="#5b3a29" stroke-width="2.4"/><circle cx="62" cy="50" r="9" fill="none" stroke="#5b3a29" stroke-width="2.4"/><line x1="47" y1="50" x2="53" y2="50" stroke="#5b3a29" stroke-width="2.4"/><ellipse cx="50" cy="62" rx="5" ry="3.6" fill="#2b2b2b"/><path d="M44 69 Q50 74 56 69" stroke="#2b2b2b" stroke-width="2" fill="none"/></svg>';
@@ -569,7 +669,9 @@
     document.getElementById("hint").style.display = "none";
     var note = reason === "webgl" ? "この環境では3D表示ができませんでした。" : "3D画面を読み込めませんでした（インターネット接続を確認してください）。";
     var head = { before: "🕖 番犬がおがおは出社前です", reported: "📋 今日の報告 " + news.length + " 件", nonews: "✅ 今日は異常なし", failed: "😥 今日は検索に失敗しました" }[STATE];
-    document.getElementById("fallbackCard").innerHTML = '<div class="note">' + note + '</div><div class="big">' + head + "</div>" +
+    document.getElementById("fallbackCard").innerHTML = '<div class="note">' + note + '</div>' +
+      '<div class="big">📜 今日の朝礼（社長 ' + esc(CPRES.name) + "）</div>" + choreiHTML() +
+      '<div class="big second">' + head + "</div>" +
       (MESSAGE ? '<p style="margin:0 0 12px">🐕 ' + esc(EMP.name) + "「" + esc(MESSAGE) + "」</p>" : "") + newsCardsHTML() +
       '<div class="big second">' + { before: "🕖 もちは出社前です", drafted: "📝 今日のSNS投稿案 " + drafts.length + " 案", failed: "😥 今日の投稿案は作れませんでした" }[SSTATE] + "</div>" +
       (SMESSAGE ? '<p style="margin:0 0 12px">🌸 ' + esc(SEMP.name) + "「" + esc(SMESSAGE) + "」</p>" : "") + draftCardsHTML() +
@@ -1397,6 +1499,57 @@
     kilt.visible = kiltWorking;
     kilt.userData.click = "kilt";
 
+    // ---------------- 鋼社長（顔に傷あとのあるドーベルマン） ----------------
+    var boss = new THREE.Group();
+    var DB = mat("#2b2627"), DT = mat("#b8692f"), SC = mat("#f0c4bb");
+    var oBody = new THREE.Group(); boss.add(oBody);
+    var oTorso = mesh(new THREE.SphereGeometry(0.42, 24, 18), DB, 0, 1.0, 0); oTorso.scale.set(1.1, 1.08, 0.95); oBody.add(oTorso);
+    [-1, 1].forEach(function (s) { var cp = mesh(new THREE.SphereGeometry(0.1, 12, 10), DT, s * 0.13, 1.2, 0.33, false); cp.scale.set(1, 0.7, 0.5); oBody.add(cp); });
+    [-1, 1].forEach(function (s) {
+      var th = mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.42, 12), DB, s * 0.2, 0.7, 0.22); th.rotation.x = Math.PI / 2; oBody.add(th);
+      oBody.add(mesh(new THREE.SphereGeometry(0.11, 12, 10), DT, s * 0.2, 0.66, 0.45));
+    });
+    // 腕組み
+    var armsF = new THREE.Group(); armsF.position.set(0, 1.05, 0.33); oBody.add(armsF);
+    [[0.05, 0.22, 1], [-0.04, -0.22, -1]].forEach(function (a) {
+      var ar = mesh(new THREE.CylinderGeometry(0.095, 0.1, 0.62, 12), DB, 0, a[0], 0); ar.rotation.z = Math.PI / 2; ar.rotation.y = a[1]; armsF.add(ar);
+      armsF.add(mesh(new THREE.SphereGeometry(0.1, 12, 10), DT, a[2] * 0.3, a[0], a[2] * -0.06));
+    });
+    var oHead = new THREE.Group(); oHead.position.set(0, 1.66, 0.04); boss.add(oHead);
+    var oSkull = mesh(new THREE.SphereGeometry(0.3, 24, 18), DB, 0, 0, 0); oSkull.scale.set(0.95, 1.0, 1.05); oHead.add(oSkull);
+    var oSnout = mesh(new THREE.SphereGeometry(0.15, 18, 12), DB, 0, -0.08, 0.3); oSnout.scale.set(0.9, 0.78, 1.55); oHead.add(oSnout);
+    var oSnoutT = mesh(new THREE.SphereGeometry(0.13, 16, 12), DT, 0, -0.14, 0.3); oSnoutT.scale.set(0.95, 0.6, 1.5); oHead.add(oSnoutT);
+    var oNose = mesh(new THREE.SphereGeometry(0.055, 12, 10), BK, 0, -0.05, 0.53); oNose.scale.set(1.2, 0.8, 0.8); oHead.add(oNose);
+    oHead.add(mesh(new THREE.BoxGeometry(0.16, 0.012, 0.012), BK, 0, -0.2, 0.42, false));
+    [-1, 1].forEach(function (s) { var br = mesh(new THREE.SphereGeometry(0.035, 10, 8), DT, s * 0.11, 0.13, 0.26, false); br.scale.set(1.3, 0.8, 0.5); oHead.add(br); });
+    var oEyes = [];
+    [-1, 1].forEach(function (s) {
+      var e = new THREE.Group(); e.position.set(s * 0.11, 0.05, 0.27);
+      var eb = mesh(new THREE.SphereGeometry(0.04, 12, 10), mat("#1a1414"), 0, 0, 0, false); eb.scale.set(1.15, 0.5, 0.6); e.add(eb);
+      e.add(mesh(new THREE.SphereGeometry(0.01, 8, 6), mat("#ffffff"), 0.014, 0.008, 0.02, false));
+      oHead.add(e); oEyes.push(e);
+    });
+    // 耳（ぴんと立った耳）
+    [-1, 1].forEach(function (s) {
+      var ear = new THREE.Group(); ear.position.set(s * 0.16, 0.3, -0.04); ear.rotation.z = -s * 0.18; oHead.add(ear);
+      ear.add(mesh(new THREE.ConeGeometry(0.08, 0.36, 12), DB, 0, 0.15, 0));
+      var ein = mesh(new THREE.ConeGeometry(0.045, 0.24, 10), DT, 0, 0.12, 0.035, false); ein.scale.z = 0.4; ear.add(ein);
+    });
+    // 顔の傷あと
+    [[-0.11, 0.07, 0.3, 0.34, 0.75], [0.04, -0.02, 0.43, 0.26, -0.5], [0.17, -0.08, 0.27, 0.2, 0.3], [-0.02, 0.2, 0.27, 0.18, -1.2]].forEach(function (c) {
+      var sc = mesh(new THREE.BoxGeometry(0.026, c[3], 0.024), SC, c[0], c[1], c[2], false); sc.rotation.z = c[4]; oHead.add(sc);
+    });
+    if (CSTATE === "failed") oHead.rotation.x = 0.25;
+    boss.position.set(-0.68, 0, -0.98);
+    boss.scale.setScalar(1.12);
+    bossDesk.add(boss);
+    var bossWorking = CSTATE !== "before";
+    boss.visible = bossWorking;
+    boss.userData.click = "boss";
+    bossChair.position.x = -0.68;
+    if (bossWorking) bossLap.visible = false; // 腕組みの社長にパソコンはいらない
+    if (!bossWorking) { var s6 = deskSign("出社前", "#eef3ff", "#4c5f91", "#9fb3e0"); s6.position.set(-0.68, 0.63, -0.95); s6.scale.setScalar(0.9); bossDesk.add(s6); }
+
     // ---------------- カメラ操作 ----------------
     var TARGET = new THREE.Vector3(0, 1.2, -0.6);
     var AZ_MIN = -0.12, AZ_MAX = 1.68;
@@ -1476,6 +1629,7 @@
     if (mochiWorking) clickables.push(pom);
     if (bullWorking) clickables.push(bull);
     if (kiltWorking) clickables.push(kilt);
+    if (bossWorking) clickables.push(boss);
     function pick(e) {
       var r = renderer.domElement.getBoundingClientRect();
       ptr.x = ((e.clientX - r.left) / r.width) * 2 - 1; ptr.y = -((e.clientY - r.top) / r.height) * 2 + 1;
@@ -1503,6 +1657,7 @@
       if (o.userData.click === "bull") openIdCard("jimu");
       if (o.userData.click === "keiri") openKeiri();
       if (o.userData.click === "kilt") openIdCard("keiri");
+      if (o.userData.click === "boss") openChorei();
     });
     renderer.domElement.addEventListener("pointermove", function (e) {
       if (e.buttons) return;
@@ -1519,6 +1674,7 @@
     // ---------------- 名札と吹き出し ----------------
     var labelsEl = document.getElementById("labels");
     var people = [
+      { obj: boss, show: bossWorking, name: CPRES.name || "鋼", msg: CMESSAGE, trouble: false, cls: "boss" },
       { obj: shiba, show: working, name: EMP.name || "番犬がおがお", msg: MESSAGE, trouble: STATE === "failed", cls: "" },
       { obj: pom, show: mochiWorking, name: SEMP.name || "もち", msg: SMESSAGE, trouble: SSTATE === "failed", cls: "mochi" },
       { obj: bull, show: bullWorking, name: JEMP.name || "ブル君", msg: JMESSAGE, trouble: JSTATE === "failed", cls: "bull" },
@@ -1587,26 +1743,30 @@
           { x: p.ax + 60, y: p.ay + 30, c: "" },
           { x: p.ax - 60 - bw, y: p.ay + 30, c: "flip" },
           { x: p.ax + 30, y: p.ay - bh - 60, c: "" },
-          { x: p.ax - 30 - bw, y: p.ay - bh - 60, c: "flip" }
+          { x: p.ax - 30 - bw, y: p.ay - bh - 60, c: "flip" },
+          { x: p.ax + 90, y: p.ay - bh / 2, c: "" },
+          { x: p.ax - 90 - bw, y: p.ay - bh / 2, c: "flip" },
+          { x: p.ax - bw / 2, y: p.ay - bh - 90, c: "notail" }
         ];
         var best = null;
         cands.forEach(function (c) {
           var x = Math.max(g, Math.min(W - bw - g, c.x)), y = Math.max(g, Math.min(H - bh - g, c.y));
           var r = { l: x, t: y, r: x + bw, b: y + bh }, cost = 0;
-          blocks.forEach(function (b) { cost += overlap(r, b); });
+          blocks.forEach(function (b) { cost += overlap(r, b) * (b.w || 1); });
           cost += (Math.abs(x - c.x) + Math.abs(y - c.y)) * 4; // 画面の端で押し戻されたぶんも少し減点
           if (!best || cost < best.cost - 1) best = { x: x, y: y, r: r, c: c.c, cost: cost };
         });
         p.bub.classList.toggle("flip", best.c === "flip");
         p.bub.classList.toggle("notail", best.c === "notail");
         p.bub.style.transform = "translate(" + Math.round(best.x) + "px," + Math.round(best.y) + "px)";
+        best.r.w = 5; // 吹き出し同士の重なりは特に避ける
         blocks.push(best.r);
       });
     }
 
     // ---------------- アニメーション ----------------
     var clockT = new THREE.Clock();
-    var nextBlink = 1.5, blinkUntil = 0, skyTimer = 0, pNextBlink = 2.6, pBlinkUntil = 0, bNextBlink = 3.4, bBlinkUntil = 0, kNextBlink = 1.9, kBlinkUntil = 0;
+    var nextBlink = 1.5, blinkUntil = 0, skyTimer = 0, pNextBlink = 2.6, pBlinkUntil = 0, bNextBlink = 3.4, bBlinkUntil = 0, kNextBlink = 1.9, kBlinkUntil = 0, oNextBlink = 4, oBlinkUntil = 0, oNod = 0;
     function animate() {
       requestAnimationFrame(animate);
       var dt = Math.min(clockT.getDelta(), 0.05), t = clockT.elapsedTime;
@@ -1670,6 +1830,17 @@
         if (t > kNextBlink) { kBlinkUntil = t + 0.13; kNextBlink = t + 2 + Math.random() * 2.5; }
         var ksy = t < kBlinkUntil ? 0.12 : 1;
         kEyes[0].scale.y = kEyes[1].scale.y = ksy;
+      }
+      if (bossWorking) {
+        oBody.scale.y = 1 + Math.sin(t * 1.1) * 0.012; // ゆっくり深い呼吸
+        if (CSTATE !== "failed") {
+          oNod = (t % 7 < 0.8) ? Math.sin((t % 7) / 0.8 * Math.PI) * 0.18 : 0; // ときどき、黙ってうなずく
+          oHead.rotation.x = 0.04 + oNod;
+          oHead.rotation.y = Math.sin(t * 0.25) * 0.12;
+        }
+        if (t > oNextBlink) { oBlinkUntil = t + 0.15; oNextBlink = t + 4 + Math.random() * 3; }
+        var osy = t < oBlinkUntil ? 0.15 : 1;
+        oEyes[0].scale.y = oEyes[1].scale.y = osy;
       }
       badges.forEach(function (b, i) { b.position.y = 0.8 + (b.userData.lift || 0) + Math.sin(t * 2.4 + i * 1.3) * 0.05; });
       renderer.render(scene, camera);
