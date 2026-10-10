@@ -61,6 +61,9 @@
     content: ""; position: absolute; left: -9px; bottom: 10px; border: 8px solid transparent;
     border-right-color: var(--paper); border-left: 0;
   }
+  #hud, #hint { transition: opacity .25s; }
+  #hud.faded, #hint.faded { opacity: .12; }
+  #hud.faded:hover { opacity: 1; }
   .bubble.flip::after { left: auto; right: -9px; border-right: 0; border-left: 8px solid var(--paper); border-top-color: transparent; border-bottom-color: transparent; }
   .bubble.notail::after { display: none; }
   .bubble.trouble { border-color: #b9c7e8; }
@@ -731,7 +734,7 @@
 
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(34, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(14, 11.5, 14);
+    camera.position.set(20, 16, 20);
 
     // --- 素材 ---
     var grad = (function () {
@@ -777,10 +780,10 @@
     var hemi = new THREE.HemisphereLight(0xfff6e8, 0xd9b48c, 0.5);
     scene.add(hemi);
     var sun = new THREE.DirectionalLight(0xfff1dc, 0.45);
-    sun.position.set(7, 13, 9);
+    sun.position.set(9, 16, 11);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.left = -10; sun.shadow.camera.right = 10; sun.shadow.camera.top = 10; sun.shadow.camera.bottom = -10;
+    sun.shadow.camera.left = -15; sun.shadow.camera.right = 15; sun.shadow.camera.top = 15; sun.shadow.camera.bottom = -15;
     sun.shadow.camera.near = 1; sun.shadow.camera.far = 40;
     sun.shadow.bias = -0.0008;
     sun.shadow.radius = 3;
@@ -812,30 +815,30 @@
         for (var k = 0; k < 3; k++) { g.beginPath(); g.moveTo(0, row * ph + 16 + k * 14); g.bezierCurveTo(170, row * ph + 10 + k * 14, 340, row * ph + 24 + k * 14, 512, row * ph + 14 + k * 14); g.stroke(); }
       }
       var t = new THREE.CanvasTexture(c);
-      t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 2.5); t.anisotropy = 8;
+      t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4.5, 3.5); t.anisotropy = 8;
       return t;
     })();
-    var floor = mesh(new THREE.BoxGeometry(12, 0.3, 10), new THREE.MeshToonMaterial({ map: floorTex, gradientMap: grad }), 0, -0.15, 0);
+    var floor = mesh(new THREE.BoxGeometry(18, 0.3, 14), new THREE.MeshToonMaterial({ map: floorTex, gradientMap: grad }), 0, -0.15, 0);
     floor.castShadow = false;
     room.add(floor);
-    room.add(mesh(new THREE.BoxGeometry(12.02, 0.3, 10.02), mat("#c48b55"), 0, -0.46, 0, false));
+    room.add(mesh(new THREE.BoxGeometry(18.02, 0.3, 14.02), mat("#c48b55"), 0, -0.46, 0, false));
 
     // --- 2面の壁 ---
     var wallMat = mat("#fbf0e2"), wainMat = mat("#f6d9bf"), baseMat = mat("#c88d57");
-    room.add(mesh(new THREE.BoxGeometry(12.3, 4.4, 0.3), wallMat, -0.15, 2.2, -5.15));
-    room.add(mesh(new THREE.BoxGeometry(0.3, 4.4, 10), wallMat, -6.15, 2.2, 0));
-    room.add(mesh(new THREE.BoxGeometry(12, 1.1, 0.04), wainMat, 0, 0.55, -4.98));
-    room.add(mesh(new THREE.BoxGeometry(0.04, 1.1, 10), wainMat, -5.98, 0.55, 0));
-    room.add(mesh(new THREE.BoxGeometry(12, 0.08, 0.08), baseMat, 0, 1.12, -4.96));
-    room.add(mesh(new THREE.BoxGeometry(0.08, 0.08, 10), baseMat, -5.96, 1.12, 0));
-    room.add(mesh(new THREE.BoxGeometry(12.3, 0.16, 0.42), baseMat, -0.15, 4.42, -5.15));
-    room.add(mesh(new THREE.BoxGeometry(0.42, 0.16, 10), baseMat, -6.15, 4.42, 0));
+    room.add(mesh(new THREE.BoxGeometry(18.3, 4.4, 0.3), wallMat, -0.15, 2.2, -7.15));
+    room.add(mesh(new THREE.BoxGeometry(0.3, 4.4, 14), wallMat, -9.15, 2.2, 0));
+    room.add(mesh(new THREE.BoxGeometry(18, 1.1, 0.04), wainMat, 0, 0.55, -6.98));
+    room.add(mesh(new THREE.BoxGeometry(0.04, 1.1, 14), wainMat, -8.98, 0.55, 0));
+    room.add(mesh(new THREE.BoxGeometry(18, 0.08, 0.08), baseMat, 0, 1.12, -6.96));
+    room.add(mesh(new THREE.BoxGeometry(0.08, 0.08, 14), baseMat, -8.96, 1.12, 0));
+    room.add(mesh(new THREE.BoxGeometry(18.3, 0.16, 0.42), baseMat, -0.15, 4.42, -7.15));
+    room.add(mesh(new THREE.BoxGeometry(0.42, 0.16, 14), baseMat, -9.15, 4.42, 0));
 
     // --- 窓（空の色が日本時間で変わる） ---
     var skyCanvas = document.createElement("canvas"); skyCanvas.width = 512; skyCanvas.height = 320;
     var skyTex = new THREE.CanvasTexture(skyCanvas);
     var win = new THREE.Group();
-    win.position.set(2.5, 2.55, -4.97);
+    win.position.set(4.6, 2.55, -6.97);
     room.add(win);
     var skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2), new THREE.MeshBasicMaterial({ map: skyTex }));
     win.add(skyPlane);
@@ -906,12 +909,12 @@
     var signFace = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 0.95), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
     signFace.rotation.y = Math.PI / 2; signFace.position.x = 0.02;
     signBoard.add(signFace);
-    signBoard.position.set(-5.96, 3.15, -0.6);
+    signBoard.position.set(-8.96, 3.15, -2.2);
     room.add(signBoard);
 
     // --- 壁時計（日本時間で動く） ---
     var clock = new THREE.Group();
-    clock.position.set(-1.6, 3.15, -4.96);
+    clock.position.set(1.4, 3.2, -6.96);
     room.add(clock);
     var faceTex = (function () {
       var c = document.createElement("canvas"); c.width = 256; c.height = 256;
@@ -948,18 +951,19 @@
       return g;
     }
     var bigPlant = plant(1.25, ["#7cc49a", "#68b588", "#93d3ab"]);
-    bigPlant.position.set(-5.2, 0, -4.2); room.add(bigPlant);
+    bigPlant.position.set(-8.1, 0, -6.1); room.add(bigPlant);
     var plant2 = plant(0.95, ["#8fd3b6", "#74c2a0"]);
-    plant2.position.set(5.2, 0, -4.3); room.add(plant2);
+    plant2.position.set(8.1, 0, -6.2); room.add(plant2);
     var plant3 = plant(0.85, ["#7cc49a", "#a3dbb9"]);
-    plant3.position.set(-5.3, 0, 4.2); room.add(plant3);
+    plant3.position.set(-8.2, 0, 6.1); room.add(plant3);
     var sill = plant(0.35, ["#8fd3b6"]);
-    sill.position.set(3.6, 1.44, -4.78); room.add(sill);
+    sill.position.set(5.7, 1.44, -6.78);
+    var plant4 = plant(1.0, ["#8fd3b6", "#68b588"]); plant4.position.set(8.2, 0, 5.6); room.add(plant4); room.add(sill);
 
     // --- ラグ ---
-    var rug = mesh(new THREE.CylinderGeometry(3.4, 3.4, 0.03, 48), mat("#fbd9bd"), 0.1, 0.015, -0.4);
+    var rug = mesh(new THREE.CylinderGeometry(5.2, 5.2, 0.03, 56), mat("#fbd9bd"), -0.2, 0.015, -0.4);
     rug.scale.z = 0.75; rug.castShadow = false; room.add(rug);
-    var rug2 = mesh(new THREE.CylinderGeometry(2.9, 2.9, 0.035, 48), mat("#fde7d3"), 0.1, 0.02, -0.4);
+    var rug2 = mesh(new THREE.CylinderGeometry(4.5, 4.5, 0.035, 56), mat("#fde7d3"), -0.2, 0.02, -0.4);
     rug2.scale.z = 0.75; rug2.castShadow = false; room.add(rug2);
 
     // --- 机・椅子・ノートPC ---
@@ -1030,7 +1034,7 @@
 
     // 社長の席（左奥）
     var bossDesk = new THREE.Group();
-    bossDesk.position.set(-2.4, 0, -2.2);
+    bossDesk.position.set(-3.2, 0, -4.6);
     room.add(bossDesk);
     bossDesk.add(desk(2.3, 1.1));
     var bossLap = laptop(true); bossLap.position.set(-0.68, 1.0, -0.14); bossDesk.add(bossLap);
@@ -1059,7 +1063,7 @@
       g.lineWidth = 14; g.strokeStyle = "#ffffff"; g.stroke();
       g.fillStyle = "#fff"; g.font = "bold 150px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(n), 128, 140);
       var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false }));
-      sp.scale.set(0.38, 0.38, 1); sp.position.set(0, 0.8, 0); sp.renderOrder = 5;
+      sp.scale.set(0.34, 0.34, 1); sp.position.set(0, 0.42, 0.25); sp.renderOrder = 5;
       return sp;
     }
     function makeTray(count, label, headColor, trayColor, badgeColor, clickKey) {
@@ -1093,12 +1097,12 @@
     sTray.position.set(0.44, 1.0, 0.1); sTray.rotation.y = 0.04; sTray.scale.setScalar(0.85); bossDesk.add(sTray);
     var jTray = makeTray(tasks.length, "事務メモ", "#7f9bd0", "#c3d1ec", "#3f5f99", "tasks");
     jTray.position.set(0.9, 1.0, 0.1); jTray.rotation.y = 0.14; jTray.scale.setScalar(0.85); bossDesk.add(jTray);
-    if (sTray.userData.badge) sTray.userData.badge.userData.lift = 0.22;
+    if (sTray.userData.badge) sTray.userData.badge.userData.lift = 0.1;
     var badges = [tray.userData.badge, sTray.userData.badge, jTray.userData.badge].filter(Boolean);
 
     // 社員の席（右奥・窓ぎわ）
     var empDesk = new THREE.Group();
-    empDesk.position.set(2.5, 0, -2.0);
+    empDesk.position.set(4.6, 0, -4.4);
     room.add(empDesk);
     empDesk.add(desk(1.8, 0.95));
     var working = STATE !== "before";
@@ -1117,7 +1121,7 @@
 
     // もちの席（左手前）
     var mochiDesk = new THREE.Group();
-    mochiDesk.position.set(-2.8, 0, 2.2);
+    mochiDesk.position.set(-6.0, 0, 1.0);
     mochiDesk.rotation.y = 0.55;
     room.add(mochiDesk);
     mochiDesk.add(desk(1.8, 0.95));
@@ -1140,7 +1144,7 @@
 
     // ブル君の席（手前のまんなか）
     var bullDesk = new THREE.Group();
-    bullDesk.position.set(0.3, 0, 3.3);
+    bullDesk.position.set(-1.8, 0, 4.4);
     bullDesk.rotation.y = 0.45;
     room.add(bullDesk);
     bullDesk.add(desk(1.8, 0.95));
@@ -1162,7 +1166,7 @@
 
     // キルトの席（右手前）
     var kiltDesk = new THREE.Group();
-    kiltDesk.position.set(4.3, 0, 2.4);
+    kiltDesk.position.set(4.8, 0, 2.6);
     kiltDesk.rotation.y = -0.2;
     room.add(kiltDesk);
     kiltDesk.add(desk(1.6, 0.9));
@@ -1197,8 +1201,8 @@
 
     // 募集中の貼り紙（奥の壁）
     var poster = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.62), new THREE.MeshBasicMaterial({ map: textTex("募集中", { w: 360, h: 248, bg: "#fff8d6", fg: "#9a6b00", size: 92, r: 24, border: "#f3cf5a" }), transparent: true }));
-    poster.position.set(0.3, 2.85, -4.96); room.add(poster);
-    var pin = mesh(new THREE.SphereGeometry(0.035, 10, 8), mat("#e0603c"), 0.3, 3.12, -4.93, false); room.add(pin);
+    poster.position.set(-6.4, 2.85, -6.96); room.add(poster);
+    var pin = mesh(new THREE.SphereGeometry(0.035, 10, 8), mat("#e0603c"), -6.4, 3.12, -6.93, false); room.add(pin);
 
     // 今月の売上のホワイトボード（奥の壁・社長の席の上）
     var wbCanvas = document.createElement("canvas"); wbCanvas.width = 640; wbCanvas.height = 400;
@@ -1230,7 +1234,7 @@
     var wbFace = new THREE.Mesh(new THREE.PlaneGeometry(1.95, 1.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(wbCanvas) }));
     wbFace.rotation.y = Math.PI / 2; wbFace.position.x = 0.035; wb.add(wbFace);
     wb.add(mesh(new THREE.BoxGeometry(0.12, 0.04, 1.6), mat("#c9ccd4"), 0.06, -0.66, 0));
-    wb.position.set(-3.75, 2.8, -4.95);
+    wb.position.set(-0.9, 2.8, -6.95);
     wb.rotation.y = -Math.PI / 2;
     wb.userData.click = "keiri";
     room.add(wb);
@@ -1551,7 +1555,7 @@
     if (!bossWorking) { var s6 = deskSign("出社前", "#eef3ff", "#4c5f91", "#9fb3e0"); s6.position.set(-0.68, 0.63, -0.95); s6.scale.setScalar(0.9); bossDesk.add(s6); }
 
     // ---------------- カメラ操作 ----------------
-    var TARGET = new THREE.Vector3(0, 1.2, -0.6);
+    var TARGET = new THREE.Vector3(-0.6, 1.2, -0.4);
     var AZ_MIN = -0.12, AZ_MAX = 1.68;
     var controls, usingOrbit = !!THREE.OrbitControls;
     var lastInteract = performance.now() - 10000, dragging = false;
@@ -1560,7 +1564,7 @@
       controls.target.copy(TARGET);
       controls.enableDamping = true; controls.dampingFactor = 0.08;
       controls.enablePan = false;
-      controls.minDistance = 8; controls.maxDistance = 50;
+      controls.minDistance = 10; controls.maxDistance = 70;
       controls.minPolarAngle = 0.35; controls.maxPolarAngle = 1.32;
       controls.minAzimuthAngle = AZ_MIN; controls.maxAzimuthAngle = AZ_MAX;
       controls.rotateSpeed = 0.6; controls.zoomSpeed = 0.8;
@@ -1587,7 +1591,7 @@
           update: function () {
             st.th = Math.min(AZ_MAX, Math.max(AZ_MIN, st.th));
             st.ph = Math.min(1.32, Math.max(0.35, st.ph));
-            st.r = Math.min(50, Math.max(8, st.r));
+            st.r = Math.min(70, Math.max(10, st.r));
             camera.position.set(TARGET.x + st.r * Math.sin(st.ph) * Math.sin(st.th), TARGET.y + st.r * Math.cos(st.ph), TARGET.z + st.r * Math.sin(st.ph) * Math.cos(st.th));
             camera.lookAt(TARGET);
           }
@@ -1598,8 +1602,8 @@
     function fitDistance() {
       var a = window.innerWidth / window.innerHeight;
       var half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-      var d = Math.max(7.2 / (half * a), 5.2 / half); // 部屋の横幅と高さが入る距離
-      return Math.min(46, Math.max(15.5, d * 0.92));
+      var d = Math.max(10.6 / (half * a), 7.4 / half); // 部屋の横幅と高さが入る距離
+      return Math.min(70, Math.max(22, d));
     }
     (function () {
       var dir = camera.position.clone().sub(TARGET).normalize();
@@ -1718,21 +1722,51 @@
         wbr.l = Math.min(wbr.l, pt.x); wbr.r = Math.max(wbr.r, pt.x); wbr.t = Math.min(wbr.t, pt.y); wbr.b = Math.max(wbr.b, pt.y);
       });
       blocks.push(wbr);
-      // まず名札を置く
+      // 1) 全員の顔の位置を先に調べる
+      var faces = [];
       people.forEach(function (p) {
         if (!p.show) return;
         var pt = toScreen(p.obj, 0, 2.25, 0), face = toScreen(p.obj, 0, 1.6, 0), seat = toScreen(p.obj, 0, 0.9, 0.2);
+        p.pt = pt;
         p.hidden = pt.z > 1 || open;
+        var fr = Math.abs(face.y - pt.y) * 0.95;
+        p.faceR = { l: Math.min(face.x, seat.x) - fr * 0.85, t: pt.y - 4, r: Math.max(face.x, seat.x) + fr * 0.85, b: seat.y + fr * 0.3, w: 40, who: p };
+        faces.push(p.faceR);
+      });
+      // 2) 左上の表示や右下の案内が顔に重なるときは、うすくする
+      var hudHit = false, hintHit = false;
+      faces.forEach(function (f) { if (overlap(f, blocks[0])) hudHit = true; if (overlap(f, blocks[1])) hintHit = true; });
+      hudEl.classList.toggle("faded", hudHit); hintEl.classList.toggle("faded", hintHit);
+      if (hudHit) blocks[0] = { l: 0, t: 0, r: 0, b: 0 };
+      if (hintHit) blocks[1] = { l: 0, t: 0, r: 0, b: 0 };
+      faces.forEach(function (f) { blocks.push(f); });
+      window.__officeFaces = faces; // 動作確認用（顔の位置）
+      // 3) 名札：頭の上。ほかの人の顔や名札にかかるなら、少しずつずらす
+      var placedTags = [];
+      people.forEach(function (p) {
+        if (!p.show) return;
         p.tag.style.visibility = p.bub.style.visibility = p.hidden ? "hidden" : "visible";
         var tw = p.tag.offsetWidth, th = p.tag.offsetHeight;
-        var tx = Math.min(W - tw - 6, Math.max(6, pt.x - tw / 2)), ty = pt.y - th;
+        var tx0 = Math.min(W - tw - 6, Math.max(6, p.pt.x - tw / 2)), ty0 = p.pt.y - th, tx = tx0, ty = ty0;
+        var tries = [[0, 0], [0, -14], [0, -28], [-tw * 0.6, 0], [tw * 0.6, 0], [0, -42], [-tw * 0.6, -14], [tw * 0.6, -14], [0, -56], [-tw, -28], [tw, -28], [-tw * 1.2, 0], [tw * 1.2, 0]];
+        var bestT = null;
+        for (var k = 0; k < tries.length; k++) {
+          var cx = Math.min(W - tw - 6, Math.max(6, tx0 + tries[k][0])), cy = Math.max(4, ty0 + tries[k][1]);
+          var tr = { l: cx - 3, t: cy - 3, r: cx + tw + 3, b: cy + th + 3 }, faceHit = 0, tagHit = 0;
+          faces.forEach(function (f) { if (f.who !== p) faceHit += overlap(tr, f); });
+          placedTags.forEach(function (q) { tagHit += overlap(tr, q); });
+          var cost = faceHit * 100 + tagHit * 10 + k;
+          if (!bestT || cost < bestT.cost) bestT = { x: cx, y: cy, cost: cost, face: faceHit };
+          if (cost === k) break;
+        }
+        tx = bestT.x; ty = bestT.y;
+        if (bestT.face > 0) { p.tag.style.visibility = "hidden"; } // どこに置いても顔にかかるときは、名札をしまう
         p.tag.style.transform = "translate(" + Math.round(tx) + "px," + Math.round(ty) + "px)";
-        p.ax = pt.x; p.ay = ty;
-        var fr = Math.abs(face.y - pt.y) * 0.9;
-        blocks.push({ l: tx, t: ty, r: tx + tw, b: ty + th });
-        blocks.push({ l: Math.min(face.x, seat.x) - fr * 0.8, t: face.y - fr * 0.6, r: Math.max(face.x, seat.x) + fr * 0.8, b: seat.y + fr * 0.3 });
+        p.ax = p.pt.x; p.ay = ty;
+        blocks.push({ l: tx, t: ty, r: tx + tw, b: ty + th, w: 6 }); placedTags.push({ l: tx, t: ty, r: tx + tw, b: ty + th });
       });
-      // 吹き出しは、空いている場所を探して置く
+      // 吹き出しは、空いている場所を探して置く（顔やほかの吹き出しにかぶるなら、しまう）
+      var placedBubbles = [];
       people.forEach(function (p) {
         if (!p.show || !p.msg || p.hidden) return;
         var bw = p.bub.offsetWidth, bh = p.bub.offsetHeight, g = 8;
@@ -1756,11 +1790,15 @@
           cost += (Math.abs(x - c.x) + Math.abs(y - c.y)) * 4; // 画面の端で押し戻されたぶんも少し減点
           if (!best || cost < best.cost - 1) best = { x: x, y: y, r: r, c: c.c, cost: cost };
         });
+        var onFace = false;
+        faces.forEach(function (f) { if (overlap(best.r, f) > 0) onFace = true; });
+        placedBubbles.forEach(function (q) { if (overlap(best.r, q) > 0) onFace = true; });
+        if (onFace) { p.bub.style.visibility = "hidden"; return; } // 顔にかぶるなら、吹き出しはしまう
         p.bub.classList.toggle("flip", best.c === "flip");
         p.bub.classList.toggle("notail", best.c === "notail");
         p.bub.style.transform = "translate(" + Math.round(best.x) + "px," + Math.round(best.y) + "px)";
         best.r.w = 5; // 吹き出し同士の重なりは特に避ける
-        blocks.push(best.r);
+        blocks.push(best.r); placedBubbles.push(best.r);
       });
     }
 
@@ -1842,7 +1880,7 @@
         var osy = t < oBlinkUntil ? 0.15 : 1;
         oEyes[0].scale.y = oEyes[1].scale.y = osy;
       }
-      badges.forEach(function (b, i) { b.position.y = 0.8 + (b.userData.lift || 0) + Math.sin(t * 2.4 + i * 1.3) * 0.05; });
+      badges.forEach(function (b, i) { b.position.y = 0.42 + (b.userData.lift || 0) + Math.sin(t * 2.4 + i * 1.3) * 0.04; });
       renderer.render(scene, camera);
       placeLabels();
     }
