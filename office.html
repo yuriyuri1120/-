@@ -17,6 +17,8 @@
     --pink-deep: #c9607e;
     --navy: #8aa3cf;
     --navy-deep: #3f5f99;
+    --gold: #e8c46a;
+    --gold-deep: #9a7210;
     --line: #f0dcc4;
     --off: #e6d9c8;
     --shadow: 0 6px 24px rgba(120, 72, 30, .16);
@@ -44,6 +46,8 @@
   .nametag.mochi::before { content: "🌸 "; }
   .nametag.bull { border-color: var(--navy); }
   .nametag.bull::before { content: "📋 "; }
+  .nametag.kilt { border-color: var(--gold); }
+  .nametag.kilt::before { content: "🧮 "; }
   .bubble {
     background: var(--paper); color: var(--ink); border-radius: 16px; padding: 8px 14px;
     font-size: 14px; font-weight: 700; max-width: 240px; line-height: 1.45; box-shadow: var(--shadow);
@@ -72,6 +76,7 @@
   #hud .dot { width: 18px; text-align: center; font-size: 9px; color: var(--ink-soft); }
   #hud .dot i { display: block; width: 14px; height: 14px; margin: 0 auto 2px; border-radius: 50%; background: var(--off); }
   #hud .dot.on i { background: var(--shiba); box-shadow: 0 0 0 2px #fde3c6; }
+  #hud .dot.gold.on i { background: var(--gold); box-shadow: 0 0 0 2px #f8edcc; }
   #hud .dot.navy.on i { background: var(--navy); box-shadow: 0 0 0 2px #dfe7f6; }
   #hud .dot.pink.on i { background: var(--pink); box-shadow: 0 0 0 2px #fbe1e8; }
   #hud .who { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; color: var(--ink-soft); margin-top: 8px; }
@@ -79,6 +84,7 @@
   #hud .who .st { font-weight: 800; color: var(--shiba-deep); }
   #hud .who .st.pink { color: var(--pink-deep); }
   #hud .who .st.navy { color: var(--navy-deep); }
+  #hud .who .st.gold { color: var(--gold-deep); }
   #hud .dot.today i { outline: 2px solid var(--ink-soft); outline-offset: 1px; }
   #hint {
     position: fixed; right: 14px; bottom: 12px; font-size: 11px; color: var(--ink-soft);
@@ -111,6 +117,11 @@
   .ncard.navy { border-color: #d5def0; }
   .ncard.navy .ic { background: #e9effa; }
   .btn.navy { background: var(--navy-deep); }
+  .ncard.gold { border-color: #f1e2b6; }
+  .ncard.gold .ic { background: #fbf3dc; }
+  .ncard .num { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .btn.gold { background: var(--gold-deep); }
+  .note { font-size: 12px; color: var(--ink-soft); margin: 4px 0 8px; }
   .ncard .sub { font-size: 12px; color: var(--ink-soft); }
   .ncard a { font-size: 12px; color: var(--shiba-deep); word-break: break-all; }
   .btn { display: inline-block; margin-top: 6px; background: var(--shiba); color: #fff; font-weight: 800; text-decoration: none; padding: 9px 16px; border-radius: 999px; font-size: 14px; }
@@ -119,6 +130,7 @@
   .idcard svg { flex: none; }
   .idcard.mochi { border-top-color: var(--pink); }
   .idcard.bull { border-top-color: var(--navy); }
+  .idcard.kilt { border-top-color: var(--gold); }
   .idcard dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 13px; }
   .idcard dt { color: var(--ink-soft); }
   .idcard dd { margin: 0; font-weight: 700; }
@@ -132,6 +144,7 @@
     #hud .dot { width: 14px; font-size: 8px; }
     #hud .dot i { width: 10px; height: 10px; }
     #hud .who { margin-top: 5px; }
+    #hud .dot { font-size: 0; }
   }
 </style>
 </head>
@@ -259,6 +272,30 @@
 }
 </script>
 <!--JIMU_DATA_END-->
+<!-- ↓↓ キルト（売上・給料まとめ担当）のデータ。data/keiri.json と完全に同じ内容をここに入れる（keiri が毎回置き換える） ↓↓ -->
+<!--KEIRI_DATA_START-->
+<script id="keiri-data" type="application/json">
+{
+  "company": "ワンワンAIカンパニー",
+  "employee": {
+    "name": "キルト",
+    "role": "売上・給料まとめ担当",
+    "hours": "毎朝 7:00（日本時間）"
+  },
+  "updated_at": "2026-10-10T11:59:00+09:00",
+  "days": [
+    {
+      "date": "2026-10-10",
+      "status": "waiting",
+      "checked_at": "2026-10-10T11:59:00+09:00",
+      "message": "社長〜♡ 表がまだ空っぽなので、キルト待ってますぅ☆",
+      "file": "経理/2026-10-10_売上と給料.md",
+      "summary": null
+    }
+  ]
+}
+</script>
+<!--KEIRI_DATA_END-->
 <!-- ↑↑ ここまでがデータ ↑↑ -->
 
 <script>
@@ -354,6 +391,25 @@
     other: { icon: "📌", label: "その他" }
   };
 
+  // ---------- キルト（売上・給料まとめ担当）のデータ ----------
+  var KDATA;
+  try { KDATA = JSON.parse(document.getElementById("keiri-data").textContent); } catch (e) { KDATA = { days: [] }; }
+  var KEMP = KDATA.employee || { name: "キルト", role: "売上・給料まとめ担当", hours: "毎朝 7:00（日本時間）" };
+  var kDayMap = {};
+  (KDATA.days || []).forEach(function (d) { kDayMap[d.date] = d; });
+  var kToday = kDayMap[TODAY] || null;
+  var ksum = (kToday && kToday.status === "done" && kToday.summary) ? kToday.summary : null;
+  var KSTATE = !kToday ? "before" : (ksum ? "done" : (kToday.status === "waiting" ? "waiting" : "failed"));
+  function yen(n) { return (typeof n === "number" && isFinite(n)) ? Math.floor(n).toLocaleString("ja-JP") + "円" : "—"; }
+  function man(n) { return (typeof n === "number" && isFinite(n)) ? (n >= 10000 ? (Math.floor(n / 1000) / 10).toLocaleString("ja-JP") + "万円" : yen(n)) : "—"; }
+  var KSTATE_LABEL = { before: "出社前", done: ksum ? "売上 " + man(ksum.sales_total) : "", waiting: "入力待ち", failed: "計算失敗" };
+  var KMESSAGE = (kToday && kToday.message) || {
+    before: "",
+    done: "社長〜♡ 今月の売上、キルトがぴったり計算しましたぁ♪",
+    waiting: "社長〜、入力がまだなので、キルト待ってますぅ☆",
+    failed: "社長、ごめんなさぁい…今日はうまく計算できませんでした…"
+  }[KSTATE];
+
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? u : "#"; }
 
@@ -380,6 +436,8 @@
     html += weekDots(sDayMap, "pink");
     html += '<div class="who"><b>📋 ' + esc(JEMP.name) + '</b><span class="st navy">' + (JSTATE === "done" ? "やること " : "") + JSTATE_LABEL[JSTATE] + "</span></div>";
     html += weekDots(jDayMap, "navy");
+    html += '<div class="who"><b>🧮 ' + esc(KEMP.name) + '</b><span class="st gold">' + KSTATE_LABEL[KSTATE] + "</span></div>";
+    html += weekDots(kDayMap, "gold");
     document.getElementById("hud").innerHTML = html;
   }
 
@@ -447,10 +505,39 @@
     var j = jst();
     openModal('<p class="mtitle">📋 今日の事務メモ<small>' + j.m + "/" + j.d + "・" + JSTATE_LABEL[JSTATE] + "</small></p>" + taskCardsHTML());
   }
+  function keiriFileLink() {
+    return encodeURI((kToday && kToday.file) || ("経理/" + TODAY + "_売上と給料.md"));
+  }
+  function keiriCardsHTML() {
+    var h = "";
+    if (KSTATE === "done") {
+      h += '<p class="note">集計期間：' + esc(ksum.from) + " 〜 " + esc(ksum.to) + "</p>";
+      h += '<div class="ncard gold"><div class="ic" title="売上">💴</div><div><div class="sub">今月の売上合計</div><div class="num">' + yen(ksum.sales_total) + '</div><div class="sub">営業 ' + esc(ksum.sales_days) + " 日・1日平均 " + yen(ksum.sales_avg) + "</div></div></div>";
+      h += '<div class="ncard gold"><div class="ic" title="給料">👛</div><div><div class="sub">給料の概算（' + esc(ksum.staff) + '人）</div><div class="num">' + yen(ksum.payroll_total) + '</div><div class="sub">税金・社会保険の差し引き前</div></div></div>';
+    } else {
+      h += '<div class="empty">' + { before: "🕖 キルトはまだ出社前です", waiting: "📝 入力待ち（経理/入力 の表に数字を書いてください）", failed: "😥 今日は計算できませんでした" }[KSTATE] + "</div>";
+    }
+    if (kToday) h += '<a class="btn gold" href="' + keiriFileLink() + '" target="_blank">🧮 まとめを開く</a>';
+    return h;
+  }
+  function openKeiri() {
+    var j = jst();
+    openModal('<p class="mtitle">🧮 今月の売上と給料<small>' + j.m + "/" + j.d + "・" + KSTATE_LABEL[KSTATE] + "</small></p>" + keiriCardsHTML());
+  }
+  var KILT_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><polygon points="10,14 34,40 20,52" fill="#e7b47c"/><polygon points="90,14 66,40 80,52" fill="#e7b47c"/><polygon points="16,24 30,40 22,46" fill="#f6c3cf"/><polygon points="84,24 70,40 78,46" fill="#f6c3cf"/><circle cx="50" cy="56" r="30" fill="#e7b47c"/><ellipse cx="50" cy="70" rx="13" ry="10" fill="#fbecd8"/><circle cx="38" cy="54" r="7" fill="#2b2b2b"/><circle cx="62" cy="54" r="7" fill="#2b2b2b"/><circle cx="40.5" cy="51" r="2.4" fill="#fff"/><circle cx="64.5" cy="51" r="2.4" fill="#fff"/><circle cx="36" cy="57" r="1.2" fill="#fff"/><circle cx="60" cy="57" r="1.2" fill="#fff"/><ellipse cx="28" cy="66" rx="5" ry="3" fill="#f3a9b9" opacity=".8"/><ellipse cx="72" cy="66" rx="5" ry="3" fill="#f3a9b9" opacity=".8"/><ellipse cx="50" cy="66" rx="3.6" ry="2.8" fill="#2b2b2b"/><path d="M46 72 Q50 75 54 72" stroke="#2b2b2b" stroke-width="1.8" fill="none"/><polygon points="58,30 70,24 70,36" fill="#ef7fa0"/><polygon points="82,30 70,24 70,36" fill="#ef7fa0"/><circle cx="70" cy="30" r="3.4" fill="#d9557e"/></svg>';
   var BULL_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><path d="M16 34 Q14 18 30 22 L34 36 Z" fill="#a8724c"/><path d="M84 34 Q86 18 70 22 L66 36 Z" fill="#a8724c"/><ellipse cx="50" cy="54" rx="38" ry="34" fill="#c8946a"/><path d="M50 22 L44 60 L56 60 Z" fill="#f3ece2"/><ellipse cx="34" cy="72" rx="18" ry="13" fill="#f3ece2"/><ellipse cx="66" cy="72" rx="18" ry="13" fill="#f3ece2"/><path d="M32 30 Q50 25 68 30" stroke="#8a5a3a" stroke-width="2" fill="none"/><path d="M36 36 Q50 32 64 36" stroke="#8a5a3a" stroke-width="2" fill="none"/><rect x="24" y="40" width="18" height="5" rx="2" fill="#3a2a22" transform="rotate(14 33 42)"/><rect x="58" y="40" width="18" height="5" rx="2" fill="#3a2a22" transform="rotate(-14 67 42)"/><circle cx="35" cy="51" r="3.6" fill="#2b2b2b"/><circle cx="65" cy="51" r="3.6" fill="#2b2b2b"/><ellipse cx="50" cy="62" rx="9" ry="6" fill="#2b2b2b"/><path d="M36 82 Q50 76 64 82" stroke="#2b2b2b" stroke-width="2.4" fill="none"/><polygon points="40,81 43,74 46,80" fill="#fff"/><polygon points="54,80 57,74 60,81" fill="#fff"/></svg>';
   var SHIBA_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><polygon points="18,40 26,8 46,28" fill="#e89b4f"/><polygon points="82,40 74,8 54,28" fill="#e89b4f"/><polygon points="24,32 28,16 38,28" fill="#fff4e2"/><polygon points="76,32 72,16 62,28" fill="#fff4e2"/><circle cx="50" cy="54" r="36" fill="#e89b4f"/><ellipse cx="50" cy="68" rx="24" ry="18" fill="#fff4e2"/><ellipse cx="38" cy="38" rx="4" ry="2.5" fill="#fff4e2"/><ellipse cx="62" cy="38" rx="4" ry="2.5" fill="#fff4e2"/><circle cx="38" cy="50" r="3.6" fill="#2b2b2b"/><circle cx="62" cy="50" r="3.6" fill="#2b2b2b"/><circle cx="38" cy="50" r="9" fill="none" stroke="#5b3a29" stroke-width="2.4"/><circle cx="62" cy="50" r="9" fill="none" stroke="#5b3a29" stroke-width="2.4"/><line x1="47" y1="50" x2="53" y2="50" stroke="#5b3a29" stroke-width="2.4"/><ellipse cx="50" cy="62" rx="5" ry="3.6" fill="#2b2b2b"/><path d="M44 69 Q50 74 56 69" stroke="#2b2b2b" stroke-width="2" fill="none"/></svg>';
   var POM_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><g fill="#d9b08a"><circle cx="50" cy="20" r="12"/><circle cx="34" cy="24" r="11"/><circle cx="66" cy="24" r="11"/><circle cx="20" cy="50" r="15"/><circle cx="80" cy="50" r="15"/><circle cx="18" cy="68" r="12"/><circle cx="82" cy="68" r="12"/></g><circle cx="50" cy="54" r="33" fill="#e3c09b"/><ellipse cx="50" cy="68" rx="15" ry="11" fill="#f7e6d0"/><circle cx="38" cy="50" r="5" fill="#2b2b2b"/><circle cx="62" cy="50" r="5" fill="#2b2b2b"/><circle cx="39.6" cy="48.2" r="1.6" fill="#fff"/><circle cx="63.6" cy="48.2" r="1.6" fill="#fff"/><ellipse cx="29" cy="62" rx="6" ry="3.6" fill="#f3a9b9" opacity=".8"/><ellipse cx="71" cy="62" rx="6" ry="3.6" fill="#f3a9b9" opacity=".8"/><ellipse cx="50" cy="63" rx="4.4" ry="3.4" fill="#2b2b2b"/><path d="M45 69 Q50 73 55 69" stroke="#2b2b2b" stroke-width="2" fill="none"/><ellipse cx="50" cy="73" rx="3" ry="3.4" fill="#f08aa3"/></svg>';
   function openIdCard(who) {
+    if (who === "keiri") {
+      var kst = { before: "出社前（7:00 出社予定）", done: "出社済み・集計済み", waiting: "出社済み・入力待ち", failed: "出社済み・計算に失敗" }[KSTATE];
+      if (kToday && kToday.checked_at) { var km = /T(\d\d:\d\d)/.exec(kToday.checked_at); if (km) kst += "（" + km[1] + "）"; }
+      openModal('<p class="mtitle">🪪 社員証</p><div class="idcard kilt">' + KILT_SVG + '<div><div class="nm">' + esc(KEMP.name) + '</div><dl>' +
+        "<dt>仕事</dt><dd>" + esc(KEMP.role) + "（今月の売上と給料の概算を毎朝まとめる）</dd>" +
+        "<dt>勤務時間</dt><dd>" + esc(KEMP.hours) + "</dd>" +
+        "<dt>今日の状態</dt><dd>" + esc(kst) + "</dd></dl></div></div>");
+      return;
+    }
     if (who === "jimu") {
       var jst2 = { before: "出社前（7:00 出社予定）", done: "出社済み・やること " + tasks.length + " 件", failed: "出社済み・作成に失敗" }[JSTATE];
       if (jToday && jToday.checked_at) { var jm = /T(\d\d:\d\d)/.exec(jToday.checked_at); if (jm) jst2 += "（" + jm[1] + "）"; }
@@ -487,7 +574,9 @@
       '<div class="big second">' + { before: "🕖 もちは出社前です", drafted: "📝 今日のSNS投稿案 " + drafts.length + " 案", failed: "😥 今日の投稿案は作れませんでした" }[SSTATE] + "</div>" +
       (SMESSAGE ? '<p style="margin:0 0 12px">🌸 ' + esc(SEMP.name) + "「" + esc(SMESSAGE) + "」</p>" : "") + draftCardsHTML() +
       '<div class="big second">' + { before: "🕖 ブル君は出社前です", done: "📋 今日の事務メモ（やること " + tasks.length + " 件）", failed: "😥 今日の事務メモは作れませんでした" }[JSTATE] + "</div>" +
-      (JMESSAGE ? '<p style="margin:0 0 12px">📋 ' + esc(JEMP.name) + "「" + esc(JMESSAGE) + "」</p>" : "") + taskCardsHTML();
+      (JMESSAGE ? '<p style="margin:0 0 12px">📋 ' + esc(JEMP.name) + "「" + esc(JMESSAGE) + "」</p>" : "") + taskCardsHTML() +
+      '<div class="big second">' + { before: "🕖 キルトは出社前です", done: "🧮 今月の売上と給料", waiting: "🧮 売上と給料：入力待ち", failed: "😥 売上と給料は計算できませんでした" }[KSTATE] + "</div>" +
+      (KMESSAGE ? '<p style="margin:0 0 12px">🧮 ' + esc(KEMP.name) + "「" + esc(KMESSAGE) + "」</p>" : "") + keiriCardsHTML();
     document.getElementById("fallback").style.display = "flex";
   }
 
@@ -969,14 +1058,80 @@
       var s4 = deskSign("出社前", "#eef3ff", "#4c5f91", "#9fb3e0"); s4.position.set(0.1, 1.0, 0.25); s4.rotation.y = 0.2; bullDesk.add(s4);
     }
 
-    // 空いている席（右手前）
-    var vacDesk = new THREE.Group();
-    vacDesk.position.set(4.3, 0, 2.4);
-    vacDesk.rotation.y = -0.2;
-    room.add(vacDesk);
-    vacDesk.add(desk(1.5, 0.85));
-    var vacChair = chair("#cfe6da"); vacChair.position.set(0, 0, -0.8); vacChair.rotation.y = 0.5; vacDesk.add(vacChair);
-    var vs = deskSign("募集中", "#fff8d6", "#9a6b00", "#f3cf5a"); vs.position.set(0.1, 1.0, 0.16); vs.rotation.y = 0.45; vacDesk.add(vs);
+    // キルトの席（右手前）
+    var kiltDesk = new THREE.Group();
+    kiltDesk.position.set(4.3, 0, 2.4);
+    kiltDesk.rotation.y = -0.2;
+    room.add(kiltDesk);
+    kiltDesk.add(desk(1.6, 0.9));
+    var kiltWorking = KSTATE !== "before";
+    var kiltLap = laptop(kiltWorking); kiltLap.position.set(-0.45, 1.0, -0.05); kiltLap.rotation.y = 0.5; kiltLap.scale.setScalar(0.85); kiltDesk.add(kiltLap);
+    var kiltChair = chair("#f3dc98"); kiltChair.position.set(0, 0, -0.85); kiltDesk.add(kiltChair);
+    // そろばん
+    var abacus = new THREE.Group();
+    var abWood = mat("#9a6a3c");
+    abacus.add(mesh(new THREE.BoxGeometry(0.62, 0.04, 0.03), abWood, 0, 0.03, 0.13));
+    abacus.add(mesh(new THREE.BoxGeometry(0.62, 0.04, 0.03), abWood, 0, 0.03, -0.13));
+    abacus.add(mesh(new THREE.BoxGeometry(0.03, 0.04, 0.29), abWood, 0.3, 0.03, 0));
+    abacus.add(mesh(new THREE.BoxGeometry(0.03, 0.04, 0.29), abWood, -0.3, 0.03, 0));
+    abacus.add(mesh(new THREE.BoxGeometry(0.6, 0.035, 0.015), abWood, 0, 0.03, -0.06));
+    var beads = [], beadMat = mat("#5a3a22");
+    for (var ri = 0; ri < 9; ri++) {
+      var rx = -0.26 + ri * 0.065;
+      abacus.add(mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.26, 4), mat("#c9c9c9"), rx, 0.03, 0, false).rotateX(Math.PI / 2));
+      var top = mesh(new THREE.SphereGeometry(0.022, 8, 6), beadMat, rx, 0.03, -0.1, false); top.scale.set(1.3, 0.8, 0.8); abacus.add(top);
+      for (var bi = 0; bi < 4; bi++) {
+        var bd = mesh(new THREE.SphereGeometry(0.022, 8, 6), beadMat, rx, 0.03, 0.0 + bi * 0.03, false); bd.scale.set(1.3, 0.8, 0.8); abacus.add(bd);
+        if (bi === 0) beads.push(bd);
+      }
+    }
+    abacus.position.set(0.05, 1.0, -0.12); kiltDesk.add(abacus);
+    var coins = new THREE.Group();
+    for (var co = 0; co < 4; co++) coins.add(mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.015, 16), mat("#e8c46a"), 0, 0.008 + co * 0.016, 0));
+    coins.position.set(0.55, 1.0, 0.18); kiltDesk.add(coins);
+    if (KSTATE === "before") {
+      var s5 = deskSign("出社前", "#eef3ff", "#4c5f91", "#9fb3e0"); s5.position.set(0.15, 1.0, 0.25); s5.rotation.y = 0.45; kiltDesk.add(s5);
+    }
+
+    // 募集中の貼り紙（奥の壁）
+    var poster = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.62), new THREE.MeshBasicMaterial({ map: textTex("募集中", { w: 360, h: 248, bg: "#fff8d6", fg: "#9a6b00", size: 92, r: 24, border: "#f3cf5a" }), transparent: true }));
+    poster.position.set(0.3, 2.85, -4.96); room.add(poster);
+    var pin = mesh(new THREE.SphereGeometry(0.035, 10, 8), mat("#e0603c"), 0.3, 3.12, -4.93, false); room.add(pin);
+
+    // 今月の売上のホワイトボード（奥の壁・社長の席の上）
+    var wbCanvas = document.createElement("canvas"); wbCanvas.width = 640; wbCanvas.height = 400;
+    (function () {
+      var g = wbCanvas.getContext("2d");
+      g.fillStyle = "#ffffff"; g.fillRect(0, 0, 640, 400);
+      g.fillStyle = "#9a7210"; g.font = "bold 40px " + FONT; g.textAlign = "left"; g.fillText("🧮 今月の売上", 28, 56);
+      if (KSTATE === "done") {
+        var daily = (ksum.daily || []).slice(-31), mx = 1;
+        daily.forEach(function (d) { mx = Math.max(mx, d.sales || 0); });
+        g.strokeStyle = "#eadfca"; g.lineWidth = 2;
+        for (var gl = 0; gl < 4; gl++) { g.beginPath(); g.moveTo(28, 330 - gl * 60); g.lineTo(612, 330 - gl * 60); g.stroke(); }
+        var bw = Math.min(40, 560 / Math.max(daily.length, 1));
+        daily.forEach(function (d, i) {
+          var hgt = Math.round((d.sales || 0) / mx * 180);
+          g.fillStyle = i === daily.length - 1 ? "#d9a21b" : "#efd38a";
+          g.fillRect(36 + i * bw, 330 - hgt, bw * 0.7, hgt);
+        });
+        g.fillStyle = "#4a3426"; g.textAlign = "right"; g.font = "bold 46px " + FONT;
+        g.fillText(yen(ksum.sales_total), 612, 56);
+        g.font = "26px " + FONT; g.fillStyle = "#8a6d58"; g.fillText(ksum.from.slice(5) + "〜" + ksum.to.slice(5), 612, 376);
+      } else {
+        g.fillStyle = "#c9b38a"; g.textAlign = "center"; g.font = "bold 64px " + FONT;
+        g.fillText({ before: "出社前", waiting: "入力待ち", failed: "計算できず" }[KSTATE], 320, 230);
+      }
+    })();
+    var wb = new THREE.Group();
+    wb.add(mesh(new THREE.BoxGeometry(0.06, 1.3, 2.05), mat("#c9ccd4"), 0, 0, 0));
+    var wbFace = new THREE.Mesh(new THREE.PlaneGeometry(1.95, 1.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(wbCanvas) }));
+    wbFace.rotation.y = Math.PI / 2; wbFace.position.x = 0.035; wb.add(wbFace);
+    wb.add(mesh(new THREE.BoxGeometry(0.12, 0.04, 1.6), mat("#c9ccd4"), 0.06, -0.66, 0));
+    wb.position.set(-3.75, 2.8, -4.95);
+    wb.rotation.y = -Math.PI / 2;
+    wb.userData.click = "keiri";
+    room.add(wb);
 
     // ---------------- 番犬がおがお（メガネの柴犬） ----------------
     var shiba = new THREE.Group();
@@ -1185,6 +1340,63 @@
     bull.visible = bullWorking;
     bull.userData.click = "bull";
 
+    // ---------------- キルト（そろばんを持ったチワワ） ----------------
+    var kilt = new THREE.Group();
+    var CF = mat("#e7b47c"), CC = mat("#fbecd8"), CP = mat("#f6c3cf"), RB = mat("#ef7fa0");
+    var kBody = new THREE.Group(); kilt.add(kBody);
+    var kTorso = mesh(new THREE.SphereGeometry(0.3, 22, 16), CF, 0, 0.9, 0); kTorso.scale.set(1, 1.1, 0.9); kBody.add(kTorso);
+    var kChest = mesh(new THREE.SphereGeometry(0.2, 16, 12), CC, 0, 0.88, 0.16); kChest.scale.set(1, 1.2, 0.6); kBody.add(kChest);
+    [-1, 1].forEach(function (s) {
+      var th = mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.34, 12), CF, s * 0.13, 0.66, 0.18); th.rotation.x = Math.PI / 2; kBody.add(th);
+      kBody.add(mesh(new THREE.SphereGeometry(0.085, 12, 10), CC, s * 0.13, 0.63, 0.37));
+    });
+    var kTail = new THREE.Group(); kTail.position.set(0, 0.85, -0.28); kBody.add(kTail);
+    var kTailM = mesh(new THREE.CylinderGeometry(0.03, 0.045, 0.3, 8), CF, 0, 0.12, -0.06); kTailM.rotation.x = -0.6; kTail.add(kTailM);
+    var kArms = [];
+    [-1, 1].forEach(function (s) {
+      var pv = new THREE.Group(); pv.position.set(s * 0.24, 1.04, 0.08); kBody.add(pv);
+      var ar = mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.5, 12), CF, 0, 0, 0.25); ar.rotation.x = Math.PI / 2; pv.add(ar);
+      pv.add(mesh(new THREE.SphereGeometry(0.075, 12, 10), CC, 0, 0, 0.5));
+      pv.rotation.set(0.42, -s * 0.12, 0);
+      kArms.push(pv);
+    });
+    var kHead = new THREE.Group(); kHead.position.set(0, 1.42, 0.04); kilt.add(kHead);
+    var kSkull = mesh(new THREE.SphereGeometry(0.33, 24, 18), CF, 0, 0.02, 0); kSkull.scale.set(1.05, 1.0, 0.95); kHead.add(kSkull);
+    var kMuzzle = mesh(new THREE.SphereGeometry(0.11, 14, 10), CC, 0, -0.12, 0.27); kMuzzle.scale.set(1.2, 0.8, 0.9); kHead.add(kMuzzle);
+    kHead.add(mesh(new THREE.SphereGeometry(0.04, 10, 8), BK, 0, -0.08, 0.36));
+    var kSmile = mesh(new THREE.TorusGeometry(0.035, 0.009, 6, 16, Math.PI), BK, 0, -0.15, 0.34, false); kSmile.rotation.z = Math.PI; kHead.add(kSmile);
+    // 大きな耳
+    var kEars = [];
+    [-1, 1].forEach(function (s) {
+      var ear = new THREE.Group(); ear.position.set(s * 0.24, 0.28, -0.02); ear.rotation.z = -s * 0.62; kHead.add(ear);
+      ear.add(mesh(new THREE.ConeGeometry(0.16, 0.42, 16), CF, 0, 0.17, 0));
+      var inn = mesh(new THREE.ConeGeometry(0.1, 0.3, 12), CP, 0, 0.14, 0.06, false); inn.scale.z = 0.4; ear.add(inn);
+      kEars.push(ear);
+    });
+    // うるうるの大きな目
+    var kEyes = [];
+    [-1, 1].forEach(function (s) {
+      var e = new THREE.Group(); e.position.set(s * 0.13, 0.04, 0.27);
+      var eb = mesh(new THREE.SphereGeometry(0.075, 14, 12), BK, 0, 0, 0, false); eb.scale.z = 0.55; e.add(eb);
+      e.add(mesh(new THREE.SphereGeometry(0.024, 8, 6), mat("#ffffff"), 0.025, 0.028, 0.04, false));
+      e.add(mesh(new THREE.SphereGeometry(0.012, 8, 6), mat("#ffffff"), -0.02, -0.02, 0.04, false));
+      kHead.add(e); kEyes.push(e);
+    });
+    [-1, 1].forEach(function (s) { var bl = mesh(new THREE.SphereGeometry(0.045, 10, 8), CP, s * 0.21, -0.08, 0.22, false); bl.scale.set(1.3, 0.7, 0.4); kHead.add(bl); });
+    // リボン
+    var ribbon = new THREE.Group(); ribbon.position.set(0.15, 0.3, 0.12); ribbon.rotation.z = -0.3; kHead.add(ribbon);
+    [-1, 1].forEach(function (s) { var w = mesh(new THREE.ConeGeometry(0.06, 0.12, 10), RB, s * 0.06, 0, 0, false); w.rotation.z = s * Math.PI / 2; ribbon.add(w); });
+    ribbon.add(mesh(new THREE.SphereGeometry(0.03, 10, 8), mat("#d9557e"), 0, 0, 0.01, false));
+    var kSweat = new THREE.Group();
+    kSweat.add(mesh(new THREE.SphereGeometry(0.045, 12, 10), mat("#8fc8f2"), 0, 0, 0, false));
+    kSweat.add(mesh(new THREE.ConeGeometry(0.045, 0.07, 12), mat("#8fc8f2"), 0, 0.05, 0, false));
+    kSweat.position.set(-0.36, 0.08, 0.1); kSweat.visible = false; kHead.add(kSweat);
+    if (KSTATE === "failed") { kSweat.visible = true; kSmile.rotation.z = 0; kSmile.position.y = -0.17; }
+    kilt.position.set(0, 0, -0.93);
+    kiltDesk.add(kilt);
+    kilt.visible = kiltWorking;
+    kilt.userData.click = "kilt";
+
     // ---------------- カメラ操作 ----------------
     var TARGET = new THREE.Vector3(0, 1.2, -0.6);
     var AZ_MIN = -0.12, AZ_MAX = 1.68;
@@ -1259,10 +1471,11 @@
     // ---------------- クリック ----------------
     var ray = new THREE.Raycaster(); ray.camera = camera;
     var ptr = new THREE.Vector2(), downAt = null;
-    var clickables = [tray, sTray, jTray];
+    var clickables = [tray, sTray, jTray, wb];
     if (working) clickables.push(shiba);
     if (mochiWorking) clickables.push(pom);
     if (bullWorking) clickables.push(bull);
+    if (kiltWorking) clickables.push(kilt);
     function pick(e) {
       var r = renderer.domElement.getBoundingClientRect();
       ptr.x = ((e.clientX - r.left) / r.width) * 2 - 1; ptr.y = -((e.clientY - r.top) / r.height) * 2 + 1;
@@ -1288,6 +1501,8 @@
       if (o.userData.click === "mochi") openIdCard("sns");
       if (o.userData.click === "tasks") openTasks();
       if (o.userData.click === "bull") openIdCard("jimu");
+      if (o.userData.click === "keiri") openKeiri();
+      if (o.userData.click === "kilt") openIdCard("keiri");
     });
     renderer.domElement.addEventListener("pointermove", function (e) {
       if (e.buttons) return;
@@ -1306,7 +1521,8 @@
     var people = [
       { obj: shiba, show: working, name: EMP.name || "番犬がおがお", msg: MESSAGE, trouble: STATE === "failed", cls: "" },
       { obj: pom, show: mochiWorking, name: SEMP.name || "もち", msg: SMESSAGE, trouble: SSTATE === "failed", cls: "mochi" },
-      { obj: bull, show: bullWorking, name: JEMP.name || "ブル君", msg: JMESSAGE, trouble: JSTATE === "failed", cls: "bull" }
+      { obj: bull, show: bullWorking, name: JEMP.name || "ブル君", msg: JMESSAGE, trouble: JSTATE === "failed", cls: "bull" },
+      { obj: kilt, show: kiltWorking, name: KEMP.name || "キルト", msg: KMESSAGE, trouble: KSTATE === "failed", cls: "kilt" }
     ];
     people.forEach(function (p) {
       p.tag = document.createElement("div"); p.tag.className = "float nametag " + p.cls; p.tag.textContent = p.name;
@@ -1339,10 +1555,17 @@
       });
       desk.l -= 14; desk.r += 14; desk.t -= 14; desk.b += 10;
       blocks.push(desk);
+      var wbr = null;
+      [[0, 0.6, 1.0], [0, -0.6, -1.0], [0, 0.6, -1.0], [0, -0.6, 1.0]].forEach(function (q) {
+        var pt = toScreen(wb, q[0], q[1], q[2]);
+        if (!wbr) wbr = { l: pt.x, t: pt.y, r: pt.x, b: pt.y };
+        wbr.l = Math.min(wbr.l, pt.x); wbr.r = Math.max(wbr.r, pt.x); wbr.t = Math.min(wbr.t, pt.y); wbr.b = Math.max(wbr.b, pt.y);
+      });
+      blocks.push(wbr);
       // まず名札を置く
       people.forEach(function (p) {
         if (!p.show) return;
-        var pt = toScreen(p.obj, 0, 2.25, 0), face = toScreen(p.obj, 0, 1.6, 0);
+        var pt = toScreen(p.obj, 0, 2.25, 0), face = toScreen(p.obj, 0, 1.6, 0), seat = toScreen(p.obj, 0, 0.9, 0.2);
         p.hidden = pt.z > 1 || open;
         p.tag.style.visibility = p.bub.style.visibility = p.hidden ? "hidden" : "visible";
         var tw = p.tag.offsetWidth, th = p.tag.offsetHeight;
@@ -1351,7 +1574,7 @@
         p.ax = pt.x; p.ay = ty;
         var fr = Math.abs(face.y - pt.y) * 0.9;
         blocks.push({ l: tx, t: ty, r: tx + tw, b: ty + th });
-        blocks.push({ l: face.x - fr * 0.8, t: face.y - fr * 0.6, r: face.x + fr * 0.8, b: face.y + fr * 0.7 });
+        blocks.push({ l: Math.min(face.x, seat.x) - fr * 0.8, t: face.y - fr * 0.6, r: Math.max(face.x, seat.x) + fr * 0.8, b: seat.y + fr * 0.3 });
       });
       // 吹き出しは、空いている場所を探して置く
       people.forEach(function (p) {
@@ -1383,7 +1606,7 @@
 
     // ---------------- アニメーション ----------------
     var clockT = new THREE.Clock();
-    var nextBlink = 1.5, blinkUntil = 0, skyTimer = 0, pNextBlink = 2.6, pBlinkUntil = 0, bNextBlink = 3.4, bBlinkUntil = 0;
+    var nextBlink = 1.5, blinkUntil = 0, skyTimer = 0, pNextBlink = 2.6, pBlinkUntil = 0, bNextBlink = 3.4, bBlinkUntil = 0, kNextBlink = 1.9, kBlinkUntil = 0;
     function animate() {
       requestAnimationFrame(animate);
       var dt = Math.min(clockT.getDelta(), 0.05), t = clockT.elapsedTime;
@@ -1432,6 +1655,21 @@
         var bsy = t < bBlinkUntil ? 0.12 : 1;
         bEyes[0].scale.y = bEyes[1].scale.y = bsy;
         var bscr = bullLap.userData.screen; bscr.offset.y = (bscr.offset.y + dt * (JSTATE === "failed" ? 0 : 0.06)) % 1;
+      }
+      if (kiltWorking) {
+        var ks = KSTATE === "done" ? 10 : 5;
+        kArms[0].rotation.x = 0.42 + Math.max(0, Math.sin(t * ks)) * 0.1;
+        kArms[1].rotation.x = 0.42 + Math.max(0, Math.sin(t * ks * 0.7 + 1.1)) * 0.06;
+        kHead.rotation.z = KSTATE === "failed" ? -0.12 + Math.sin(t * 1.1) * 0.03 : Math.sin(t * 1.4) * 0.09; // かわいく首をかしげる
+        kHead.rotation.x = 0.08 + Math.sin(t * 1.2) * 0.03;
+        kEars[0].rotation.z = 0.62 + Math.sin(t * 3.1) * 0.05; kEars[1].rotation.z = -0.62 - Math.sin(t * 3.1 + 0.6) * 0.05;
+        kBody.position.y = Math.sin(t * 2.4) * 0.008;
+        kTail.rotation.z = Math.sin(t * (KSTATE === "failed" ? 2 : 11)) * 0.4;
+        if (kSweat.visible) kSweat.position.y = 0.08 - ((t * 0.25) % 0.12);
+        if (KSTATE === "done") beads.forEach(function (bd, i) { bd.position.z = -0.03 + Math.max(0, Math.sin(t * 3 + i * 1.7)) * 0.03; });
+        if (t > kNextBlink) { kBlinkUntil = t + 0.13; kNextBlink = t + 2 + Math.random() * 2.5; }
+        var ksy = t < kBlinkUntil ? 0.12 : 1;
+        kEyes[0].scale.y = kEyes[1].scale.y = ksy;
       }
       badges.forEach(function (b, i) { b.position.y = 0.8 + (b.userData.lift || 0) + Math.sin(t * 2.4 + i * 1.3) * 0.05; });
       renderer.render(scene, camera);
