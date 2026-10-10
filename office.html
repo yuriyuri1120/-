@@ -128,7 +128,7 @@
 {
   "company": "たなかAIカンパニー",
   "employee": {
-    "name": "ニュースくん",
+    "name": "番犬がおがお",
     "role": "AIニュース担当",
     "hours": "毎朝 7:00（日本時間）"
   },
@@ -209,7 +209,7 @@
   // ---------- データの読み込み ----------
   var DATA;
   try { DATA = JSON.parse(document.getElementById("news-data").textContent); }
-  catch (e) { DATA = { company: "たなかAIカンパニー", employee: { name: "ニュースくん", role: "AIニュース担当", hours: "毎朝 7:00（日本時間）" }, days: [] }; }
+  catch (e) { DATA = { company: "たなかAIカンパニー", employee: { name: "番犬がおがお", role: "AIニュース担当", hours: "毎朝 7:00（日本時間）" }, days: [] }; }
   var EMP = DATA.employee || {};
   var FONT = '"Hiragino Maru Gothic ProN","Hiragino Sans","BIZ UDPGothic","Yu Gothic UI","Meiryo",sans-serif';
 
@@ -367,7 +367,7 @@
     document.getElementById("loading").style.display = "none";
     document.getElementById("hint").style.display = "none";
     var note = reason === "webgl" ? "この環境では3D表示ができませんでした。" : "3D画面を読み込めませんでした（インターネット接続を確認してください）。";
-    var head = { before: "🕖 ニュースくんは出社前です", reported: "📋 今日の報告 " + news.length + " 件", nonews: "✅ 今日は異常なし", failed: "😥 今日は検索に失敗しました" }[STATE];
+    var head = { before: "🕖 番犬がおがおは出社前です", reported: "📋 今日の報告 " + news.length + " 件", nonews: "✅ 今日は異常なし", failed: "😥 今日は検索に失敗しました" }[STATE];
     document.getElementById("fallbackCard").innerHTML = '<div class="note">' + note + '</div><div class="big">' + head + "</div>" +
       (MESSAGE ? '<p style="margin:0 0 12px">🐕 ' + esc(EMP.name) + "「" + esc(MESSAGE) + "」</p>" : "") + newsCardsHTML() +
       '<div class="big second">' + { before: "🕖 もちは出社前です", drafted: "📝 今日のSNS投稿案 " + drafts.length + " 案", failed: "😥 今日の投稿案は作れませんでした" }[SSTATE] + "</div>" +
@@ -735,7 +735,7 @@
     mug.add(mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.01, 16), mat("#7a4a2a"), 0, 0.145, 0));
     mug.position.set(-1.0, 1.0, -0.28); bossDesk.add(mug);
 
-    // 社長の机のトレー：報告書（ニュースくん）と投稿案（もち）。クリックで今日の見出し
+    // 社長の机のトレー：報告書（番犬がおがお）と投稿案（もち）。クリックで今日の見出し
     function paperTex(label, color) {
       var c = document.createElement("canvas"); c.width = 256; c.height = 340;
       var g = c.getContext("2d");
@@ -838,7 +838,7 @@
     var vacChair = chair("#cfe6da"); vacChair.position.set(0, 0, -0.85); vacChair.rotation.y = 0.5; vacDesk.add(vacChair);
     var vs = deskSign("募集中", "#fff8d6", "#9a6b00", "#f3cf5a"); vs.position.set(0.1, 1.0, 0.18); vs.rotation.y = 0.45; vacDesk.add(vs);
 
-    // ---------------- ニュースくん（メガネの柴犬） ----------------
+    // ---------------- 番犬がおがお（メガネの柴犬） ----------------
     var shiba = new THREE.Group();
     var OR = mat("#e89b4f"), CR = mat("#fff4e2"), BK = mat("#2b2b2b"), GL = mat("#5b3a29");
     var body = new THREE.Group(); shiba.add(body);
@@ -1095,7 +1095,7 @@
     // ---------------- 名札と吹き出し ----------------
     var labelsEl = document.getElementById("labels");
     var people = [
-      { obj: shiba, show: working, name: EMP.name || "ニュースくん", msg: MESSAGE, trouble: STATE === "failed", cls: "" },
+      { obj: shiba, show: working, name: EMP.name || "番犬がおがお", msg: MESSAGE, trouble: STATE === "failed", cls: "" },
       { obj: pom, show: mochiWorking, name: SEMP.name || "もち", msg: SMESSAGE, trouble: SSTATE === "failed", cls: "mochi" }
     ];
     people.forEach(function (p) {
