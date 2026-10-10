@@ -13,6 +13,8 @@
     --shiba: #e89b4f;
     --shiba-deep: #c97a32;
     --mint: #8fd3b6;
+    --pink: #e9a3b6;
+    --pink-deep: #c9607e;
     --line: #f0dcc4;
     --off: #e6d9c8;
     --shadow: 0 6px 24px rgba(120, 72, 30, .16);
@@ -30,22 +32,24 @@
 
   /* 名札・吹き出し（3Dの位置に合わせて動かす） */
   .float { position: fixed; left: 0; top: 0; pointer-events: none; will-change: transform; display: none; }
-  #nametag {
+  .nametag {
     background: var(--paper); border: 2px solid var(--shiba); color: var(--ink);
     border-radius: 999px; padding: 3px 12px; font-size: 13px; font-weight: 700; white-space: nowrap;
     box-shadow: var(--shadow);
   }
-  #nametag::before { content: "🐾 "; }
-  #bubble {
+  .nametag::before { content: "🐾 "; }
+  .nametag.mochi { border-color: var(--pink); }
+  .nametag.mochi::before { content: "🌸 "; }
+  .bubble {
     background: var(--paper); color: var(--ink); border-radius: 16px; padding: 8px 14px;
     font-size: 14px; font-weight: 700; max-width: 240px; line-height: 1.45; box-shadow: var(--shadow);
     border: 2px solid var(--line);
   }
-  #bubble::after {
+  .bubble::after {
     content: ""; position: absolute; left: -9px; bottom: 10px; border: 8px solid transparent;
     border-right-color: var(--paper); border-left: 0;
   }
-  #bubble.trouble { border-color: #b9c7e8; }
+  .bubble.trouble { border-color: #b9c7e8; }
 
   /* 画面の隅の小さな表示 */
   #hud {
@@ -62,6 +66,11 @@
   #hud .dot { width: 18px; text-align: center; font-size: 9px; color: var(--ink-soft); }
   #hud .dot i { display: block; width: 14px; height: 14px; margin: 0 auto 2px; border-radius: 50%; background: var(--off); }
   #hud .dot.on i { background: var(--shiba); box-shadow: 0 0 0 2px #fde3c6; }
+  #hud .dot.pink.on i { background: var(--pink); box-shadow: 0 0 0 2px #fbe1e8; }
+  #hud .who { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; color: var(--ink-soft); margin-top: 8px; }
+  #hud .who b { color: var(--ink); font-size: 12px; }
+  #hud .who .st { font-weight: 800; color: var(--shiba-deep); }
+  #hud .who .st.pink { color: var(--pink-deep); }
   #hud .dot.today i { outline: 2px solid var(--ink-soft); outline-offset: 1px; }
   #hint {
     position: fixed; right: 14px; bottom: 12px; font-size: 11px; color: var(--ink-soft);
@@ -76,6 +85,7 @@
   #fallback .card { background: var(--paper); border-radius: 22px; box-shadow: var(--shadow); padding: 20px; width: min(520px, 100%); }
   #fallback .note { font-size: 12px; color: var(--ink-soft); }
   #fallback .big { font-size: 22px; font-weight: 800; margin: 8px 0 12px; }
+  #fallback .big.second { margin-top: 22px; font-size: 18px; }
 
   /* ポップアップ */
   #modal { position: fixed; inset: 0; background: rgba(74, 52, 38, .35); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
@@ -87,11 +97,16 @@
   .ncard { display: flex; gap: 12px; align-items: center; background: var(--paper); border-radius: 16px; padding: 12px; margin-bottom: 10px; border: 2px solid var(--line); }
   .ncard .ic { font-size: 26px; width: 44px; height: 44px; display: grid; place-items: center; background: #fff3e4; border-radius: 12px; flex: none; }
   .ncard .hd { font-weight: 800; font-size: 15px; line-height: 1.35; }
+  .ncard.pink { border-color: #f6d3dc; }
+  .ncard.pink .ic { background: #fdebef; }
+  .btn.pink { background: var(--pink-deep); }
+  .ncard .sub { font-size: 12px; color: var(--ink-soft); }
   .ncard a { font-size: 12px; color: var(--shiba-deep); word-break: break-all; }
   .btn { display: inline-block; margin-top: 6px; background: var(--shiba); color: #fff; font-weight: 800; text-decoration: none; padding: 9px 16px; border-radius: 999px; font-size: 14px; }
   .empty { background: var(--paper); border-radius: 16px; padding: 18px; text-align: center; font-weight: 700; margin-bottom: 10px; }
   .idcard { display: flex; gap: 14px; align-items: center; background: var(--paper); border-radius: 18px; padding: 14px; border-top: 10px solid var(--shiba); }
   .idcard svg { flex: none; }
+  .idcard.mochi { border-top-color: var(--pink); }
   .idcard dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 13px; }
   .idcard dt { color: var(--ink-soft); }
   .idcard dd { margin: 0; font-weight: 700; }
@@ -101,8 +116,7 @@
 <body>
 <div id="stage"></div>
 <div id="loading">オフィスを準備中…</div>
-<div id="nametag" class="float"></div>
-<div id="bubble" class="float"></div>
+<div id="labels"></div>
 <div id="hud"></div>
 <div id="hint">ドラッグで回転・ホイールで拡大／報告書や社員をクリック</div>
 <div id="fallback"><div class="card" id="fallbackCard"></div></div>
@@ -149,6 +163,43 @@
 }
 </script>
 <!--NEWS_DATA_END-->
+<!-- ↓↓ もち（SNS投稿担当）のデータ。data/sns.json と完全に同じ内容をここに入れる（sns が毎回置き換える） ↓↓ -->
+<!--SNS_DATA_START-->
+<script id="sns-data" type="application/json">
+{
+  "company": "たなかAIカンパニー",
+  "employee": {
+    "name": "もち",
+    "role": "SNS投稿担当",
+    "hours": "毎朝 7:00（日本時間）"
+  },
+  "updated_at": "2026-10-10T11:30:00+09:00",
+  "days": [
+    {
+      "date": "2026-10-10",
+      "status": "drafted",
+      "checked_at": "2026-10-10T11:30:00+09:00",
+      "message": "社長〜、3連休の初日なので、連休向けの投稿案を3つご用意しましたよ〜",
+      "drafts_file": "SNS/2026-10-10_SNS投稿案.md",
+      "drafts": [
+        {
+          "title": "3連休初日に秋のおすすめ紹介",
+          "platform": "instagram"
+        },
+        {
+          "title": "連休中の営業日を短くお知らせ",
+          "platform": "x"
+        },
+        {
+          "title": "3連休の営業時間のお知らせ",
+          "platform": "google"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<!--SNS_DATA_END-->
 <!-- ↑↑ ここまでがデータ ↑↑ -->
 
 <script>
@@ -199,24 +250,52 @@
     other: { icon: "📰", label: "その他" }
   };
 
+  // ---------- もち（SNS投稿担当）のデータ ----------
+  var SDATA;
+  try { SDATA = JSON.parse(document.getElementById("sns-data").textContent); } catch (e) { SDATA = { days: [] }; }
+  var SEMP = SDATA.employee || { name: "もち", role: "SNS投稿担当", hours: "毎朝 7:00（日本時間）" };
+  var sDayMap = {};
+  (SDATA.days || []).forEach(function (d) { sDayMap[d.date] = d; });
+  var sToday = sDayMap[TODAY] || null;
+  var drafts = (sToday && sToday.status === "drafted" && sToday.drafts) ? sToday.drafts.slice(0, 3) : [];
+  var SSTATE = !sToday ? "before" : (sToday.status === "drafted" && drafts.length ? "drafted" : "failed");
+  var SSTATE_LABEL = { before: "出社前", drafted: drafts.length + "案", failed: "作成失敗" };
+  var SMESSAGE = (sToday && sToday.message) || {
+    before: "",
+    drafted: "社長〜、今日の投稿案を" + drafts.length + "つご用意しましたよ〜",
+    failed: "社長、すみません…今日はうまく作れませんでした〜"
+  }[SSTATE];
+  var PLAT = {
+    instagram: { icon: "📷", label: "Instagram" },
+    x: { icon: "✖️", label: "X" },
+    google: { icon: "📍", label: "Googleビジネスプロフィール" },
+    line: { icon: "💬", label: "LINE" }
+  };
+
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? u : "#"; }
 
   // ---------- 隅の表示（3Dがなくても必ず出す） ----------
+  function weekDots(map, cls) {
+    var j = jst(), html = '<div class="week">';
+    for (var i = 6; i >= 0; i--) {
+      var ds = ymd(j.y, j.m, j.d - i);
+      var t = new Date(Date.UTC(j.y, j.m - 1, j.d - i));
+      var on = !!map[ds];
+      html += '<div class="dot ' + cls + (on ? " on" : "") + (i === 0 ? " today" : "") + '" title="' + ds + (on ? " 出勤" : " 記録なし") + '"><i></i>' + WD[t.getUTCDay()] + "</div>";
+    }
+    return html + "</div>";
+  }
   function renderHUD() {
     var j = jst();
     var html = '<div class="co">' + esc(DATA.company) + '</div>';
     html += '<div class="date">' + j.y + "年" + j.m + "月" + j.d + "日（" + weekday(j.y, j.m, j.d) + "）</div>";
     if (STATE === "reported") html += '<div class="count"><span>今日</span><b>' + news.length + '</b><span>件</span></div>';
     else html += '<div class="count state"><span>今日</span><b>' + STATE_LABEL[STATE] + '</b></div>';
-    html += '<div class="week" title="直近7日の出勤">';
-    for (var i = 6; i >= 0; i--) {
-      var ds = ymd(j.y, j.m, j.d - i);
-      var t = new Date(Date.UTC(j.y, j.m - 1, j.d - i));
-      var on = !!dayMap[ds];
-      html += '<div class="dot' + (on ? " on" : "") + (i === 0 ? " today" : "") + '" title="' + ds + (on ? " 出勤" : " 記録なし") + '"><i></i>' + WD[t.getUTCDay()] + "</div>";
-    }
-    html += "</div>";
+    html += '<div class="who"><b>🐕 ' + esc(EMP.name) + '</b><span class="st">' + (STATE === "reported" ? "ニュース " : "") + STATE_LABEL[STATE] + "</span></div>";
+    html += weekDots(dayMap, "");
+    html += '<div class="who"><b>🌸 ' + esc(SEMP.name) + '</b><span class="st pink">' + (SSTATE === "drafted" ? "投稿案 " : "") + SSTATE_LABEL[SSTATE] + "</span></div>";
+    html += weekDots(sDayMap, "pink");
     document.getElementById("hud").innerHTML = html;
   }
 
@@ -244,18 +323,37 @@
     var j = jst();
     openModal('<p class="mtitle">📋 今日の報告<small>' + j.m + "/" + j.d + "・" + STATE_LABEL[STATE] + "</small></p>" + newsCardsHTML());
   }
+  function draftsFileLink() {
+    return encodeURI((sToday && sToday.drafts_file) || ("SNS/" + TODAY + "_SNS投稿案.md"));
+  }
+  function draftCardsHTML() {
+    var h = "";
+    if (SSTATE === "drafted") {
+      drafts.forEach(function (d) {
+        var pl = PLAT[d.platform] || { icon: "📝", label: "SNS" };
+        h += '<div class="ncard pink"><div class="ic" title="' + esc(pl.label) + '">' + pl.icon + '</div><div><div class="hd">' + esc(d.title) + '</div><div class="sub">' + esc(pl.label) + "向け</div></div></div>";
+      });
+    } else {
+      h += '<div class="empty">' + (SSTATE === "before" ? "🕖 もちはまだ出社前です" : "😥 今日は投稿案を作れませんでした") + "</div>";
+    }
+    if (sToday) h += '<a class="btn pink" href="' + draftsFileLink() + '" target="_blank">📝 投稿案ファイルを開く</a>';
+    return h;
+  }
+  function openDrafts() {
+    var j = jst();
+    openModal('<p class="mtitle">📝 今日のSNS投稿案<small>' + j.m + "/" + j.d + "・" + SSTATE_LABEL[SSTATE] + "</small></p>" + draftCardsHTML());
+  }
   var SHIBA_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><polygon points="18,40 26,8 46,28" fill="#e89b4f"/><polygon points="82,40 74,8 54,28" fill="#e89b4f"/><polygon points="24,32 28,16 38,28" fill="#fff4e2"/><polygon points="76,32 72,16 62,28" fill="#fff4e2"/><circle cx="50" cy="54" r="36" fill="#e89b4f"/><ellipse cx="50" cy="68" rx="24" ry="18" fill="#fff4e2"/><ellipse cx="38" cy="38" rx="4" ry="2.5" fill="#fff4e2"/><ellipse cx="62" cy="38" rx="4" ry="2.5" fill="#fff4e2"/><circle cx="38" cy="50" r="3.6" fill="#2b2b2b"/><circle cx="62" cy="50" r="3.6" fill="#2b2b2b"/><circle cx="38" cy="50" r="9" fill="none" stroke="#5b3a29" stroke-width="2.4"/><circle cx="62" cy="50" r="9" fill="none" stroke="#5b3a29" stroke-width="2.4"/><line x1="47" y1="50" x2="53" y2="50" stroke="#5b3a29" stroke-width="2.4"/><ellipse cx="50" cy="62" rx="5" ry="3.6" fill="#2b2b2b"/><path d="M44 69 Q50 74 56 69" stroke="#2b2b2b" stroke-width="2" fill="none"/></svg>';
-  function openIdCard() {
-    var st = {
-      before: "出社前（7:00 出社予定）",
-      reported: "出社済み・報告 " + news.length + " 件",
-      nonews: "出社済み・異常なし",
-      failed: "出社済み・検索に失敗"
-    }[STATE];
-    if (today && today.checked_at) { var m = /T(\d\d:\d\d)/.exec(today.checked_at); if (m) st += "（" + m[1] + "）"; }
-    openModal('<p class="mtitle">🪪 社員証</p><div class="idcard">' + SHIBA_SVG + '<div><div class="nm">' + esc(EMP.name) + '</div><dl>' +
-      "<dt>仕事</dt><dd>" + esc(EMP.role) + "（直近24時間のAIニュースを最大5件報告）</dd>" +
-      "<dt>勤務時間</dt><dd>" + esc(EMP.hours) + "</dd>" +
+  var POM_SVG = '<svg width="86" height="86" viewBox="0 0 100 100" aria-hidden="true"><g fill="#d9b08a"><circle cx="50" cy="20" r="12"/><circle cx="34" cy="24" r="11"/><circle cx="66" cy="24" r="11"/><circle cx="20" cy="50" r="15"/><circle cx="80" cy="50" r="15"/><circle cx="18" cy="68" r="12"/><circle cx="82" cy="68" r="12"/></g><circle cx="50" cy="54" r="33" fill="#e3c09b"/><ellipse cx="50" cy="68" rx="15" ry="11" fill="#f7e6d0"/><circle cx="38" cy="50" r="5" fill="#2b2b2b"/><circle cx="62" cy="50" r="5" fill="#2b2b2b"/><circle cx="39.6" cy="48.2" r="1.6" fill="#fff"/><circle cx="63.6" cy="48.2" r="1.6" fill="#fff"/><ellipse cx="29" cy="62" rx="6" ry="3.6" fill="#f3a9b9" opacity=".8"/><ellipse cx="71" cy="62" rx="6" ry="3.6" fill="#f3a9b9" opacity=".8"/><ellipse cx="50" cy="63" rx="4.4" ry="3.4" fill="#2b2b2b"/><path d="M45 69 Q50 73 55 69" stroke="#2b2b2b" stroke-width="2" fill="none"/><ellipse cx="50" cy="73" rx="3" ry="3.4" fill="#f08aa3"/></svg>';
+  function openIdCard(who) {
+    var isSns = who === "sns", e = isSns ? SEMP : EMP, st, rec = isSns ? sToday : today;
+    if (isSns) st = { before: "出社前（7:00 出社予定）", drafted: "出社済み・投稿案 " + drafts.length + " 案", failed: "出社済み・作成に失敗" }[SSTATE];
+    else st = { before: "出社前（7:00 出社予定）", reported: "出社済み・報告 " + news.length + " 件", nonews: "出社済み・異常なし", failed: "出社済み・検索に失敗" }[STATE];
+    if (rec && rec.checked_at) { var m = /T(\d\d:\d\d)/.exec(rec.checked_at); if (m) st += "（" + m[1] + "）"; }
+    var job = isSns ? "（お店のSNS投稿文の下書きを毎朝3案）" : "（直近24時間のAIニュースを最大5件報告）";
+    openModal('<p class="mtitle">🪪 社員証</p><div class="idcard' + (isSns ? " mochi" : "") + '">' + (isSns ? POM_SVG : SHIBA_SVG) + '<div><div class="nm">' + esc(e.name) + '</div><dl>' +
+      "<dt>仕事</dt><dd>" + esc(e.role) + job + "</dd>" +
+      "<dt>勤務時間</dt><dd>" + esc(e.hours) + "</dd>" +
       "<dt>今日の状態</dt><dd>" + esc(st) + "</dd></dl></div></div>");
   }
   var modal = document.getElementById("modal");
@@ -271,7 +369,9 @@
     var note = reason === "webgl" ? "この環境では3D表示ができませんでした。" : "3D画面を読み込めませんでした（インターネット接続を確認してください）。";
     var head = { before: "🕖 ニュースくんは出社前です", reported: "📋 今日の報告 " + news.length + " 件", nonews: "✅ 今日は異常なし", failed: "😥 今日は検索に失敗しました" }[STATE];
     document.getElementById("fallbackCard").innerHTML = '<div class="note">' + note + '</div><div class="big">' + head + "</div>" +
-      (MESSAGE ? '<p style="margin:0 0 12px">🐕 ' + esc(EMP.name) + "「" + esc(MESSAGE) + "」</p>" : "") + newsCardsHTML();
+      (MESSAGE ? '<p style="margin:0 0 12px">🐕 ' + esc(EMP.name) + "「" + esc(MESSAGE) + "」</p>" : "") + newsCardsHTML() +
+      '<div class="big second">' + { before: "🕖 もちは出社前です", drafted: "📝 今日のSNS投稿案 " + drafts.length + " 案", failed: "😥 今日の投稿案は作れませんでした" }[SSTATE] + "</div>" +
+      (SMESSAGE ? '<p style="margin:0 0 12px">🌸 ' + esc(SEMP.name) + "「" + esc(SMESSAGE) + "」</p>" : "") + draftCardsHTML();
     document.getElementById("fallback").style.display = "flex";
   }
 
@@ -626,63 +726,66 @@
     bossDesk.position.set(-2.4, 0, -2.2);
     room.add(bossDesk);
     bossDesk.add(desk(2.3, 1.1));
-    var bossLap = laptop(true); bossLap.position.set(-0.3, 1.0, -0.12); bossDesk.add(bossLap);
+    var bossLap = laptop(true); bossLap.position.set(-0.42, 1.0, -0.12); bossDesk.add(bossLap);
     var bossChair = chair("#f08e6a"); bossChair.position.set(-0.3, 0, -0.95); bossDesk.add(bossChair);
-    var bossSign = deskSign("社長", "#fff3e4", "#c0582f", "#f08e6a"); bossSign.position.set(-0.85, 1.0, 0.35); bossSign.rotation.y = 0.35; bossDesk.add(bossSign);
+    var bossSign = deskSign("社長", "#fff3e4", "#c0582f", "#f08e6a"); bossSign.position.set(-0.95, 1.0, 0.33); bossSign.rotation.y = 0.35; bossDesk.add(bossSign);
     var mug = new THREE.Group();
     mug.add(mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.15, 16), mat("#ffffff"), 0, 0.075, 0));
     mug.add(mesh(new THREE.TorusGeometry(0.04, 0.012, 8, 16), mat("#ffffff"), 0.075, 0.08, 0));
     mug.add(mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.01, 16), mat("#7a4a2a"), 0, 0.145, 0));
-    mug.position.set(-0.95, 1.0, -0.2); bossDesk.add(mug);
+    mug.position.set(-1.0, 1.0, -0.28); bossDesk.add(mug);
 
-    // 報告書トレー（クリックで今日の見出し）
-    var tray = new THREE.Group();
-    tray.position.set(0.55, 1.0, 0.05);
-    tray.rotation.y = -0.15;
-    bossDesk.add(tray);
-    var trayMat = mat("#f2b880");
-    tray.add(mesh(new THREE.BoxGeometry(0.62, 0.03, 0.78), trayMat, 0, 0.015, 0));
-    [[0, 0.06, 0.38, 0.62, 0.1, 0.03], [0, 0.06, -0.38, 0.62, 0.1, 0.03], [0.3, 0.06, 0, 0.03, 0.1, 0.78], [-0.3, 0.06, 0, 0.03, 0.1, 0.78]].forEach(function (b) {
-      tray.add(mesh(new THREE.BoxGeometry(b[3], b[4], b[5]), trayMat, b[0], b[1], b[2]));
-    });
-    var paperTop = (function () {
+    // 社長の机のトレー：報告書（ニュースくん）と投稿案（もち）。クリックで今日の見出し
+    function paperTex(label, color) {
       var c = document.createElement("canvas"); c.width = 256; c.height = 340;
       var g = c.getContext("2d");
       g.fillStyle = "#ffffff"; g.fillRect(0, 0, 256, 340);
-      g.fillStyle = "#e89b4f"; g.fillRect(0, 0, 256, 50);
-      g.fillStyle = "#ffffff"; g.font = "bold 30px " + FONT; g.textAlign = "center"; g.fillText("報告書", 128, 36);
+      g.fillStyle = color; g.fillRect(0, 0, 256, 50);
+      g.fillStyle = "#ffffff"; g.font = "bold 30px " + FONT; g.textAlign = "center"; g.fillText(label, 128, 36);
       g.fillStyle = "#e6d9c8"; for (var i = 0; i < 8; i++) g.fillRect(28, 80 + i * 30, 200 - (i % 3) * 30, 10);
       return new THREE.CanvasTexture(c);
-    })();
-    var paperMat = mat("#ffffff");
-    for (var pi = 0; pi < news.length; pi++) {
-      var sheet = mesh(new THREE.BoxGeometry(0.46, 0.024, 0.62), paperMat, (pi % 2 ? 0.015 : -0.01), 0.045 + pi * 0.03, (pi % 3 - 1) * 0.012);
-      sheet.rotation.y = (pi % 2 ? 0.06 : -0.05);
-      tray.add(sheet);
-      if (pi === news.length - 1) {
-        var top = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.6), new THREE.MeshBasicMaterial({ map: paperTop }));
-        top.rotation.x = -Math.PI / 2; top.position.y = 0.013;
-        sheet.add(top);
+    }
+    function badgeSprite(n, color) {
+      var c = document.createElement("canvas"); c.width = 256; c.height = 256;
+      var g = c.getContext("2d");
+      g.fillStyle = color; g.beginPath(); g.arc(128, 128, 116, 0, Math.PI * 2); g.fill();
+      g.lineWidth = 14; g.strokeStyle = "#ffffff"; g.stroke();
+      g.fillStyle = "#fff"; g.font = "bold 150px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(n), 128, 140);
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false }));
+      sp.scale.set(0.38, 0.38, 1); sp.position.set(0, 0.8, 0); sp.renderOrder = 5;
+      return sp;
+    }
+    function makeTray(count, label, headColor, trayColor, badgeColor, clickKey) {
+      var tr = new THREE.Group();
+      var tm = mat(trayColor);
+      tr.add(mesh(new THREE.BoxGeometry(0.5, 0.03, 0.68), tm, 0, 0.015, 0));
+      [[0, 0.06, 0.33, 0.5, 0.1, 0.03], [0, 0.06, -0.33, 0.5, 0.1, 0.03], [0.24, 0.06, 0, 0.03, 0.1, 0.68], [-0.24, 0.06, 0, 0.03, 0.1, 0.68]].forEach(function (b) {
+        tr.add(mesh(new THREE.BoxGeometry(b[3], b[4], b[5]), tm, b[0], b[1], b[2]));
+      });
+      var pt = paperTex(label, headColor), pm = mat("#ffffff");
+      for (var i = 0; i < count; i++) {
+        var sheet = mesh(new THREE.BoxGeometry(0.4, 0.024, 0.56), pm, (i % 2 ? 0.012 : -0.008), 0.045 + i * 0.03, (i % 3 - 1) * 0.01);
+        sheet.rotation.y = (i % 2 ? 0.06 : -0.05);
+        tr.add(sheet);
+        if (i === count - 1) {
+          var top = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.54), new THREE.MeshBasicMaterial({ map: pt }));
+          top.rotation.x = -Math.PI / 2; top.position.y = 0.013;
+          sheet.add(top);
+        }
       }
+      var hit = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.5, 0.8), new THREE.MeshBasicMaterial({ visible: false }));
+      hit.position.y = 0.2; tr.add(hit);
+      tr.userData.click = clickKey;
+      tr.userData.badge = count ? badgeSprite(count, badgeColor) : null;
+      if (tr.userData.badge) tr.add(tr.userData.badge);
+      return tr;
     }
-    var trayHit = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.95), new THREE.MeshBasicMaterial({ visible: false }));
-    trayHit.position.y = 0.2; tray.add(trayHit);
-    tray.userData.click = "reports";
-    // 件数バッジ（ふわふわ浮く）
-    var badge = null;
-    if (STATE === "reported") {
-      var bt = (function () {
-        var c = document.createElement("canvas"); c.width = 256; c.height = 256;
-        var g = c.getContext("2d");
-        g.fillStyle = "#e0603c"; g.beginPath(); g.arc(128, 128, 116, 0, Math.PI * 2); g.fill();
-        g.lineWidth = 14; g.strokeStyle = "#ffffff"; g.stroke();
-        g.fillStyle = "#fff"; g.font = "bold 150px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(news.length), 128, 140);
-        return new THREE.CanvasTexture(c);
-      })();
-      badge = new THREE.Sprite(new THREE.SpriteMaterial({ map: bt, depthTest: false }));
-      badge.scale.set(0.42, 0.42, 1); badge.position.set(0, 0.85, 0); badge.renderOrder = 5;
-      tray.add(badge);
-    }
+    var tray = makeTray(news.length, "報告書", "#e89b4f", "#f2b880", "#e0603c", "reports");
+    tray.position.set(0.28, 1.0, 0.08); tray.rotation.y = -0.12; bossDesk.add(tray);
+    var sTray = makeTray(drafts.length, "投稿案", "#e9a3b6", "#f4c2cf", "#d9668a", "drafts");
+    sTray.position.set(0.84, 1.0, 0.1); sTray.rotation.y = 0.1; bossDesk.add(sTray);
+    if (sTray.userData.badge) sTray.userData.badge.userData.lift = 0.18;
+    var badges = [tray.userData.badge, sTray.userData.badge].filter(Boolean);
 
     // 社員の席（右奥・窓ぎわ）
     var empDesk = new THREE.Group();
@@ -703,14 +806,37 @@
       var s2 = deskSign("異常なし", "#e8f8ef", "#2f7a55", "#8fd3b6"); s2.position.set(0.5, 1.0, 0.28); s2.rotation.y = 0.4; empDesk.add(s2);
     }
 
-    // 空いている席（左手前）
+    // もちの席（左手前）
+    var mochiDesk = new THREE.Group();
+    mochiDesk.position.set(-2.8, 0, 2.2);
+    mochiDesk.rotation.y = 0.55;
+    room.add(mochiDesk);
+    mochiDesk.add(desk(1.8, 0.95));
+    var mochiWorking = SSTATE !== "before";
+    var mochiLap = laptop(mochiWorking); mochiLap.position.set(0, 1.0, -0.15); mochiDesk.add(mochiLap);
+    var mochiChair = chair("#f4c2cf"); mochiChair.position.set(0, 0, -0.9); mochiDesk.add(mochiChair);
+    var phone = new THREE.Group();
+    phone.add(mesh(new THREE.BoxGeometry(0.13, 0.015, 0.24), mat("#ffffff"), 0, 0.008, 0));
+    var phScr = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.2), new THREE.MeshBasicMaterial({ color: mochiWorking ? 0xfde3ea : 0x3b3b46 }));
+    phScr.rotation.x = -Math.PI / 2; phScr.position.y = 0.017; phone.add(phScr);
+    phone.position.set(0.55, 1.0, 0.05); phone.rotation.y = -0.4; mochiDesk.add(phone);
+    var flower = new THREE.Group();
+    flower.add(mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.14, 12), mat("#ffffff"), 0, 0.07, 0));
+    [[0, 0.22, 0], [0.05, 0.19, 0.03], [-0.05, 0.19, -0.02]].forEach(function (p, i) { flower.add(mesh(new THREE.SphereGeometry(0.045, 10, 8), mat(i ? "#f6b9c8" : "#ef93ab"), p[0], p[1], p[2])); });
+    flower.add(mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.12, 6), mat("#74c2a0"), 0, 0.15, 0));
+    flower.position.set(-0.65, 1.0, 0.1); mochiDesk.add(flower);
+    if (SSTATE === "before") {
+      var s3 = deskSign("出社前", "#eef3ff", "#4c5f91", "#9fb3e0"); s3.position.set(0.15, 1.0, 0.25); s3.rotation.y = 0.45; mochiDesk.add(s3);
+    }
+
+    // 空いている席（右手前）
     var vacDesk = new THREE.Group();
-    vacDesk.position.set(-2.8, 0, 2.4);
-    vacDesk.rotation.y = 0.0;
+    vacDesk.position.set(4.1, 0, 1.7);
+    vacDesk.rotation.y = -0.3;
     room.add(vacDesk);
-    vacDesk.add(desk(1.8, 0.95));
-    var vacChair = chair("#cfe6da"); vacChair.position.set(0, 0, -0.9); vacChair.rotation.y = 0.5; vacDesk.add(vacChair);
-    var vs = deskSign("募集中", "#fff8d6", "#9a6b00", "#f3cf5a"); vs.position.set(0.15, 1.0, 0.2); vs.rotation.y = 0.45; vacDesk.add(vs);
+    vacDesk.add(desk(1.6, 0.9));
+    var vacChair = chair("#cfe6da"); vacChair.position.set(0, 0, -0.85); vacChair.rotation.y = 0.5; vacDesk.add(vacChair);
+    var vs = deskSign("募集中", "#fff8d6", "#9a6b00", "#f3cf5a"); vs.position.set(0.1, 1.0, 0.18); vs.rotation.y = 0.45; vacDesk.add(vs);
 
     // ---------------- ニュースくん（メガネの柴犬） ----------------
     var shiba = new THREE.Group();
@@ -787,6 +913,72 @@
     shiba.visible = working;
     shiba.userData.click = "employee";
 
+    // ---------------- もち（薄茶色のポメプー） ----------------
+    var pom = new THREE.Group();
+    var TN = mat("#d9b08a"), LT = mat("#e8c7a3"), PC = mat("#f7e6d0"), PK = mat("#f3a9b9");
+    var pBody = new THREE.Group(); pom.add(pBody);
+    var pTorso = mesh(new THREE.SphereGeometry(0.36, 22, 16), LT, 0, 0.98, 0); pTorso.scale.set(1, 1.08, 0.92); pBody.add(pTorso);
+    // ふわふわの毛
+    for (var fi = 0; fi < 10; fi++) {
+      var fa = fi / 10 * Math.PI * 2;
+      pBody.add(mesh(new THREE.SphereGeometry(0.15, 12, 10), fi % 2 ? TN : LT, Math.cos(fa) * 0.3, 1.0 + Math.sin(fa * 2) * 0.12, Math.sin(fa) * 0.26));
+    }
+    [[0, 1.12, 0.26, 0.17], [-0.12, 0.95, 0.27, 0.14], [0.12, 0.95, 0.27, 0.14], [0, 0.82, 0.24, 0.14]].forEach(function (f) { pBody.add(mesh(new THREE.SphereGeometry(f[3], 12, 10), PC, f[0], f[1], f[2])); });
+    [-1, 1].forEach(function (s) {
+      var th = mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.4, 12), LT, s * 0.17, 0.7, 0.22); th.rotation.x = Math.PI / 2; pBody.add(th);
+      pBody.add(mesh(new THREE.SphereGeometry(0.12, 12, 10), PC, s * 0.17, 0.66, 0.44));
+    });
+    var pTail = new THREE.Group(); pTail.position.set(0, 1.08, -0.36); pBody.add(pTail);
+    [[0, 0.06, 0, 0.15], [0.08, 0.14, -0.05, 0.11], [-0.07, 0.13, -0.04, 0.11], [0, 0.22, -0.02, 0.1]].forEach(function (f) { pTail.add(mesh(new THREE.SphereGeometry(f[3], 12, 10), f[3] > 0.12 ? TN : LT, f[0], f[1], f[2])); });
+    var pArms = [];
+    [-1, 1].forEach(function (s) {
+      var pv = new THREE.Group(); pv.position.set(s * 0.29, 1.15, 0.1); pBody.add(pv);
+      var ar = mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.46, 12), LT, 0, 0, 0.23); ar.rotation.x = Math.PI / 2; pv.add(ar);
+      pv.add(mesh(new THREE.SphereGeometry(0.1, 12, 10), PC, 0, 0, 0.48));
+      pv.rotation.set(0.3, -s * 0.18, 0);
+      pArms.push(pv);
+    });
+    var pHead = new THREE.Group(); pHead.position.set(0, 1.6, 0.04); pom.add(pHead);
+    var pSkull = mesh(new THREE.SphereGeometry(0.34, 24, 18), LT, 0, 0, 0); pHead.add(pSkull);
+    // 顔のまわりのふわふわ（ポメの毛）とトップのもこもこ（プードルの毛）
+    for (var hi = 0; hi < 12; hi++) {
+      var ha = hi / 12 * Math.PI * 2;
+      pHead.add(mesh(new THREE.SphereGeometry(0.13, 12, 10), hi % 3 ? LT : TN, Math.cos(ha) * 0.32, Math.sin(ha) * 0.3 - 0.02, -0.06));
+    }
+    [[0, 0.33, 0.02, 0.15], [-0.13, 0.3, 0.05, 0.12], [0.13, 0.3, 0.05, 0.12], [0, 0.36, -0.12, 0.13]].forEach(function (f) { pHead.add(mesh(new THREE.SphereGeometry(f[3], 12, 10), TN, f[0], f[1], f[2])); });
+    // たれ耳
+    [-1, 1].forEach(function (s) {
+      [[0, 0.1, 0.13], [0.03, -0.02, 0.12], [0.02, -0.13, 0.1]].forEach(function (f) { pHead.add(mesh(new THREE.SphereGeometry(f[2], 12, 10), TN, s * (0.33 + f[0]), f[1], 0.02)); });
+    });
+    var pMuzzle = mesh(new THREE.SphereGeometry(0.14, 16, 12), PC, 0, -0.1, 0.27); pMuzzle.scale.set(1.15, 0.85, 0.9); pHead.add(pMuzzle);
+    pHead.add(mesh(new THREE.SphereGeometry(0.05, 12, 10), BK, 0, -0.05, 0.39));
+    var pSmile = mesh(new THREE.TorusGeometry(0.04, 0.011, 6, 16, Math.PI), BK, 0, -0.13, 0.37, false); pSmile.rotation.z = Math.PI; pHead.add(pSmile);
+    var pTongue = mesh(new THREE.SphereGeometry(0.03, 10, 8), mat("#f08aa3"), 0, -0.18, 0.35, false); pTongue.scale.set(1, 1.2, 0.6); pHead.add(pTongue);
+    var pEyes = [];
+    [-1, 1].forEach(function (s) {
+      var e = new THREE.Group(); e.position.set(s * 0.13, 0.04, 0.29);
+      var eb = mesh(new THREE.SphereGeometry(0.058, 12, 10), BK, 0, 0, 0, false); eb.scale.z = 0.6; e.add(eb);
+      e.add(mesh(new THREE.SphereGeometry(0.018, 8, 6), mat("#ffffff"), 0.018, 0.022, 0.03, false));
+      pHead.add(e); pEyes.push(e);
+    });
+    [-1, 1].forEach(function (s) { var bl = mesh(new THREE.SphereGeometry(0.05, 10, 8), PK, s * 0.21, -0.08, 0.25, false); bl.scale.set(1.3, 0.7, 0.4); pHead.add(bl); });
+    var pBrows = [];
+    [-1, 1].forEach(function (s) { var b = mesh(new THREE.SphereGeometry(0.03, 8, 6), TN, s * 0.13, 0.15, 0.3, false); b.scale.set(1.5, 0.6, 0.5); b.visible = false; pHead.add(b); pBrows.push(b); });
+    var pSweat = new THREE.Group();
+    pSweat.add(mesh(new THREE.SphereGeometry(0.05, 12, 10), mat("#8fc8f2"), 0, 0, 0, false));
+    pSweat.add(mesh(new THREE.ConeGeometry(0.05, 0.08, 12), mat("#8fc8f2"), 0, 0.055, 0, false));
+    pSweat.position.set(-0.4, 0.12, 0.12); pSweat.visible = false; pHead.add(pSweat);
+    if (SSTATE === "failed") {
+      pSweat.visible = true; pTongue.visible = false;
+      pSmile.rotation.z = 0; pSmile.position.y = -0.16;
+      pBrows.forEach(function (b, i) { b.visible = true; b.rotation.z = i ? 0.5 : -0.5; });
+    }
+    pom.position.set(0, 0, -0.98);
+    pom.scale.setScalar(1.12);
+    mochiDesk.add(pom);
+    pom.visible = mochiWorking;
+    pom.userData.click = "mochi";
+
     // ---------------- カメラ操作 ----------------
     var TARGET = new THREE.Vector3(0, 1.2, -0.6);
     var AZ_MIN = -0.12, AZ_MAX = 1.68;
@@ -861,8 +1053,9 @@
     // ---------------- クリック ----------------
     var ray = new THREE.Raycaster(); ray.camera = camera;
     var ptr = new THREE.Vector2(), downAt = null;
-    var clickables = [tray];
+    var clickables = [tray, sTray];
     if (working) clickables.push(shiba);
+    if (mochiWorking) clickables.push(pom);
     function pick(e) {
       var r = renderer.domElement.getBoundingClientRect();
       ptr.x = ((e.clientX - r.left) / r.width) * 2 - 1; ptr.y = -((e.clientY - r.top) / r.height) * 2 + 1;
@@ -883,7 +1076,9 @@
       var o = pick(e);
       if (!o) return;
       if (o.userData.click === "reports") openReports();
-      if (o.userData.click === "employee") openIdCard();
+      if (o.userData.click === "drafts") openDrafts();
+      if (o.userData.click === "employee") openIdCard("news");
+      if (o.userData.click === "mochi") openIdCard("sns");
     });
     renderer.domElement.addEventListener("pointermove", function (e) {
       if (e.buttons) return;
@@ -898,29 +1093,36 @@
     renderer.domElement.style.cursor = "grab";
 
     // ---------------- 名札と吹き出し ----------------
-    var tagEl = document.getElementById("nametag"), bubEl = document.getElementById("bubble");
-    tagEl.textContent = EMP.name || "ニュースくん";
-    if (working) {
-      tagEl.style.display = "block";
-      if (MESSAGE) { bubEl.textContent = MESSAGE; bubEl.style.display = "block"; if (STATE === "failed") bubEl.classList.add("trouble"); }
-    }
+    var labelsEl = document.getElementById("labels");
+    var people = [
+      { obj: shiba, show: working, name: EMP.name || "ニュースくん", msg: MESSAGE, trouble: STATE === "failed", cls: "" },
+      { obj: pom, show: mochiWorking, name: SEMP.name || "もち", msg: SMESSAGE, trouble: SSTATE === "failed", cls: "mochi" }
+    ];
+    people.forEach(function (p) {
+      p.tag = document.createElement("div"); p.tag.className = "float nametag " + p.cls; p.tag.textContent = p.name;
+      p.bub = document.createElement("div"); p.bub.className = "float bubble" + (p.trouble ? " trouble" : ""); p.bub.textContent = p.msg || "";
+      labelsEl.appendChild(p.tag); labelsEl.appendChild(p.bub);
+      if (p.show) { p.tag.style.display = "block"; if (p.msg) p.bub.style.display = "block"; }
+    });
     var v3 = new THREE.Vector3();
     function placeLabels() {
-      if (!working) return;
-      shiba.localToWorld(v3.set(0, 2.25, 0));
-      v3.project(camera);
-      var x = (v3.x * 0.5 + 0.5) * window.innerWidth, y = (-v3.y * 0.5 + 0.5) * window.innerHeight;
-      var hide = v3.z > 1 || modal.classList.contains("open");
-      tagEl.style.visibility = bubEl.style.visibility = hide ? "hidden" : "visible";
-      var tx = Math.min(window.innerWidth - tagEl.offsetWidth - 6, Math.max(6, x - tagEl.offsetWidth / 2));
-      tagEl.style.transform = "translate(" + Math.round(tx) + "px," + Math.round(y - tagEl.offsetHeight) + "px)";
-      var bx = Math.max(8, Math.min(x + 34, window.innerWidth - bubEl.offsetWidth - 8));
-      bubEl.style.transform = "translate(" + Math.round(bx) + "px," + Math.round(y - tagEl.offsetHeight - bubEl.offsetHeight - 6) + "px)";
+      var open = modal.classList.contains("open");
+      people.forEach(function (p) {
+        if (!p.show) return;
+        p.obj.localToWorld(v3.set(0, 2.25, 0));
+        v3.project(camera);
+        var x = (v3.x * 0.5 + 0.5) * window.innerWidth, y = (-v3.y * 0.5 + 0.5) * window.innerHeight;
+        p.tag.style.visibility = p.bub.style.visibility = (v3.z > 1 || open) ? "hidden" : "visible";
+        var tx = Math.min(window.innerWidth - p.tag.offsetWidth - 6, Math.max(6, x - p.tag.offsetWidth / 2));
+        p.tag.style.transform = "translate(" + Math.round(tx) + "px," + Math.round(y - p.tag.offsetHeight) + "px)";
+        var bx = Math.max(8, Math.min(x + 34, window.innerWidth - p.bub.offsetWidth - 8));
+        p.bub.style.transform = "translate(" + Math.round(bx) + "px," + Math.round(y - p.tag.offsetHeight - p.bub.offsetHeight - 6) + "px)";
+      });
     }
 
     // ---------------- アニメーション ----------------
     var clockT = new THREE.Clock();
-    var nextBlink = 1.5, blinkUntil = 0, skyTimer = 0;
+    var nextBlink = 1.5, blinkUntil = 0, skyTimer = 0, pNextBlink = 2.6, pBlinkUntil = 0;
     function animate() {
       requestAnimationFrame(animate);
       var dt = Math.min(clockT.getDelta(), 0.05), t = clockT.elapsedTime;
@@ -942,7 +1144,21 @@
         eyes[0].scale.y = eyes[1].scale.y = sy;
         var scr = empLap.userData.screen; scr.offset.y = (scr.offset.y + dt * (STATE === "failed" ? 0 : 0.05)) % 1;
       }
-      if (badge) badge.position.y = 0.85 + Math.sin(t * 2.4) * 0.05;
+      if (mochiWorking) {
+        var ps = SSTATE === "failed" ? 4 : 9;
+        pArms[0].rotation.x = 0.3 + Math.max(0, Math.sin(t * ps + 0.7)) * 0.1;
+        pArms[1].rotation.x = 0.3 + Math.max(0, Math.sin(t * ps + 0.7 + Math.PI)) * 0.1;
+        pHead.rotation.z = SSTATE === "failed" ? -0.12 + Math.sin(t * 1.1) * 0.03 : Math.sin(t * 0.7) * 0.07;
+        pHead.rotation.x = Math.sin(t * 1.3) * 0.03 + 0.06;
+        pBody.position.y = Math.sin(t * 1.8 + 1) * 0.01;
+        pTail.rotation.z = Math.sin(t * (SSTATE === "failed" ? 2 : 7)) * (SSTATE === "failed" ? 0.06 : 0.3);
+        if (pSweat.visible) pSweat.position.y = 0.12 - ((t * 0.25) % 0.12);
+        if (t > pNextBlink) { pBlinkUntil = t + 0.14; pNextBlink = t + 2.5 + Math.random() * 3; }
+        var psy = t < pBlinkUntil ? 0.12 : 1;
+        pEyes[0].scale.y = pEyes[1].scale.y = psy;
+        var ms = mochiLap.userData.screen; ms.offset.y = (ms.offset.y + dt * (SSTATE === "failed" ? 0 : 0.04)) % 1;
+      }
+      badges.forEach(function (b, i) { b.position.y = 0.8 + (b.userData.lift || 0) + Math.sin(t * 2.4 + i * 1.3) * 0.05; });
       renderer.render(scene, camera);
       placeLabels();
     }

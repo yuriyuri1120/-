@@ -1,0 +1,32 @@
+{
+  "company": "たなかAIカンパニー",
+  "employee": {
+    "name": "もち",
+    "role": "SNS投稿担当",
+    "hours": "毎朝 7:00（日本時間）"
+  },
+  "updated_at": "2026-10-10T11:30:00+09:00",
+  "days": [
+    {
+      "date": "2026-10-10",
+      "status": "drafted",
+      "checked_at": "2026-10-10T11:30:00+09:00",
+      "message": "社長〜、3連休の初日なので、連休向けの投稿案を3つご用意しましたよ〜",
+      "drafts_file": "SNS/2026-10-10_SNS投稿案.md",
+      "drafts": [
+        {
+          "title": "3連休初日に秋のおすすめ紹介",
+          "platform": "instagram"
+        },
+        {
+          "title": "連休中の営業日を短くお知らせ",
+          "platform": "x"
+        },
+        {
+          "title": "3連休の営業時間のお知らせ",
+          "platform": "google"
+        }
+      ]
+    }
+  ]
+}
